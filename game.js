@@ -1,10 +1,10 @@
 let Game = function (args) {
     this.board = args.board;
     this.move = Data.moves[0];
-    // this.players = this._buildPlayers();
 };
 
 Game.prototype.start = function() {
+    this.board.drawStatics({ to: document.body });
     this.board.drawStones(this.move.fields);
 };
 

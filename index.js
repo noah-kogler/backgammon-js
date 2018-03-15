@@ -10,5 +10,5 @@ document.addEventListener('DOMContentLoaded', function () {
         board: board
     });
 
-    board.draw({ to: document.body });
+    game.start();
 });
