@@ -33,55 +33,31 @@ Board.prototype._buildBackgroundBox = function() {
 Board.prototype._buildFields = function() {
     let fields = [];
 
-    // top left
+    let x = 0;
+    let isTop = true;
     let isWhite = true;
-    let start = 0;
-    for (let i = 0; i < 6; i++) {
-        let end = start + this.fieldWidth;
-
+    for (let i = 0; i < 24; i++) {
         fields.push(
-            new Field({ board: this, x: start, isTop: true, isWhite: isWhite })
+            new Field({ board: this, x: x, isTop: isTop, isWhite: isWhite })
         );
 
         isWhite = !isWhite;
-        start = end;
-    }
 
-    // top right
-    start += this.horizontalSpacing;
-    for (let i = 0; i < 6; i++) {
-        let end = start + this.fieldWidth;
-        fields.push(
-            new Field({ board: this, x: start, isTop: true, isWhite: isWhite })
-        );
-
-        isWhite = !isWhite;
-        start = end;
-    }
-
-    // bottom left
-    start = this.width - this.fieldWidth;
-    for (let i = 0; i < 6; i++) {
-        let end = start - this.fieldWidth;
-        fields.push(
-            new Field({ board: this, x: start, isTop: false, isWhite: isWhite })
-        );
-
-        isWhite = !isWhite;
-        start = end;
-    }
-
-    // bottom right
-    start -= this.horizontalSpacing;
-    for (let i = 0; i < 6; i++) {
-        let end = start - this.fieldWidth;
-
-        fields.push(
-            new Field({ board: this, x: start, isTop: false, isWhite: isWhite })
-        );
-
-        isWhite = !isWhite;
-        start = end;
+        if (i < 11) {
+            x += this.fieldWidth;
+            if (i === 5) {
+                x += this.horizontalSpacing;
+            }
+        }
+        else if (i === 11) {
+            isTop = false;
+        }
+        else {
+            x -= this.fieldWidth;
+            if (i === 17) {
+                x -= this.horizontalSpacing;
+            }
+        }
     }
 
     return fields;
