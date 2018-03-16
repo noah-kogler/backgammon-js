@@ -9,6 +9,7 @@ let Board = function (args) { // args: width, height, verticalSpacing, horizonta
     this.fields = this._buildFields();
     this.centerBox = this._buildCenterBox();
     this.backgroundBox = this._buildBackgroundBox();
+    this.game = undefined; // gets set when a game is initialized with this board
 };
 
 Board.prototype._buildSvg = function() {
@@ -38,7 +39,7 @@ Board.prototype._buildFields = function() {
     let isWhite = true;
     for (let i = 0; i < 24; i++) {
         fields.push(
-            new Field({ board: this, x: x, isTop: isTop, isWhite: isWhite })
+            new Field({ board: this, index: i, x: x, isTop: isTop, isWhite: isWhite })
         );
 
         isWhite = !isWhite;
@@ -106,4 +107,16 @@ Board.prototype.drawStones = function(stones) {
 
 Board.prototype.initStoneInteraction = function(color) {
     this.fields.forEach((field) => { field.initStoneInteraction(color) });
+};
+
+Board.prototype.markPossibleTargets = function(startIdx) {
+    for (let i = 0; i < this.fields.length; i++) {
+        if (this.game.isMovable({ from: startIdx, to: i })) {
+            this.fields[i].showTargetMarker();
+        }
+    }
+};
+
+Board.prototype.removePossibleTargetMarks = function() {
+    this.fields.forEach((field) => { field.removeTargetMarker(); });
 };
