@@ -3,7 +3,7 @@ let Data = {};
 Data.moves = [
     {
         player: 'white',
-        fields: [
+        stones: [
             // top left
             { white: 2, black: 0 },
             { white: 0, black: 0 },

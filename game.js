@@ -5,20 +5,5 @@ let Game = function (args) {
 
 Game.prototype.start = function() {
     this.board.drawStatics({ to: document.body });
-    this.board.drawStones(this.move.fields);
+    this.board.drawStones(this.move.stones);
 };
-
-// Game.prototype._buildPlayers = function() {
-//     return [
-//         new Player(),
-//         new Player(),
-//     ];
-// };
-
-// let Player = function (args) {
-//     this.stones = this._buidStones();
-// };
-
-// Player.prototype._buildStones = function() {
-//     // body...
-// };

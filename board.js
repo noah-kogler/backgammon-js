@@ -37,14 +37,10 @@ Board.prototype._buildFields = function() {
     let isWhite = true;
     let start = 0;
     for (let i = 0; i < 6; i++) {
-        let center = start + this.fieldWidth / 2;
         let end = start + this.fieldWidth;
 
         fields.push(
-            this._buildField({
-                points: [[start, 0], [center, this.fieldHeight], [end, 0]],
-                isWhite: isWhite,
-            })
+            new Field({ board: this, x: start, isTop: true, isWhite: isWhite })
         );
 
         isWhite = !isWhite;
@@ -54,14 +50,9 @@ Board.prototype._buildFields = function() {
     // top right
     start += this.horizontalSpacing;
     for (let i = 0; i < 6; i++) {
-        let center = start + this.fieldWidth / 2;
         let end = start + this.fieldWidth;
-
         fields.push(
-            this._buildField({
-                points: [[start, 0], [center, this.fieldHeight], [end, 0]],
-                isWhite: isWhite,
-            })
+            new Field({ board: this, x: start, isTop: true, isWhite: isWhite })
         );
 
         isWhite = !isWhite;
@@ -69,17 +60,11 @@ Board.prototype._buildFields = function() {
     }
 
     // bottom left
-    start = 0;
-    isWhite = !isWhite;
+    start = this.width - this.fieldWidth;
     for (let i = 0; i < 6; i++) {
-        let center = start + this.fieldWidth / 2;
-        let end = start + this.fieldWidth;
-
+        let end = start - this.fieldWidth;
         fields.push(
-            this._buildField({
-                points: [[start, this.height], [center, this.height - this.fieldHeight], [end, this.height]],
-                isWhite: isWhite,
-            })
+            new Field({ board: this, x: start, isTop: false, isWhite: isWhite })
         );
 
         isWhite = !isWhite;
@@ -87,16 +72,12 @@ Board.prototype._buildFields = function() {
     }
 
     // bottom right
-    start += this.horizontalSpacing;
+    start -= this.horizontalSpacing;
     for (let i = 0; i < 6; i++) {
-        let center = start + this.fieldWidth / 2;
-        let end = start + this.fieldWidth;
+        let end = start - this.fieldWidth;
 
         fields.push(
-            this._buildField({
-                points: [[start, this.height], [center, this.height - this.fieldHeight], [end, this.height]],
-                isWhite: isWhite,
-            })
+            new Field({ board: this, x: start, isTop: false, isWhite: isWhite })
         );
 
         isWhite = !isWhite;
@@ -104,20 +85,6 @@ Board.prototype._buildFields = function() {
     }
 
     return fields;
-};
-
-Board.prototype._buildField = function(args) {
-    return this.svg.create({
-        name: 'polygon',
-        attrs: {
-            'points': args.points,
-            'stroke': 'black',
-            'stroke-width': .2,
-            'stroke-linecap': 'round',
-            'fill': args.isWhite ? 'white' : 'black',
-            'fill-opacity': .75,
-        },
-    });
 };
 
 Board.prototype._buildCenterBox = function() {
@@ -137,74 +104,100 @@ Board.prototype._buildCenterBox = function() {
 Board.prototype.drawStatics = function(args) {
     this.svg.append({ node: this.backgroundBox, to: this.svg.root });
 
-    this.fields.forEach((field) => { this.svg.append({ node: field, to: this.svg.root }) });
+    this.fields.forEach((field) => { this.svg.append({ node: field.node, to: this.svg.root }) });
     this.svg.append({ node: this.centerBox, to: this.svg.root });
 
     this.svg.append({ node: this.svg.root, to: args.to });
 };
 
-Board.prototype.drawStones = function(fieldsData) {
-    let diff = 5;
-    let r = this.fieldWidth / 2 - diff;
-    let x = r + diff;
-    let y = 0;
-    let i = 0;
-    let down = true;
-    fieldsData.forEach((fieldData) => {
-        for (let j = 0; j < fieldData.white; j++) {
-            this.svg.append({
-                node: this.svg.create({
-                    name: 'circle',
-                    attrs: {
-                        'cx': x,
-                        'cy': down ? y + r : y - r,
-                        'r': r,
-                        'fill': 'white',
-                        'stroke': 'black',
-                        'stroke-width': .4,
-                    },
-                }),
-                to: this.svg.root,
-            });
-            y = down ? y + r * 2 : y - r * 2;
-        }
-        for (let j = 0; j < fieldData.black; j++) {
-            this.svg.append({
-                node: this.svg.create({
-                    name: 'circle',
-                    attrs: {
-                        'cx': x,
-                        'cy': down ? y + r : y - r,
-                        'r': r,
-                        'fill': 'black',
-                        'stroke': 'white',
-                        'stroke-width': .4,
-                    },
-                }),
-                to: this.svg.root,
-            });
-            y = down ? y + r * 2 : y - r * 2;
-        }
+Board.prototype.drawStones = function(stones) {
+    if (stones.length !== this.fields.length) {
+        console.error(
+            "Different stones and fields length. "
+            + "There must be a stones entry for every field!"
+        );
+    }
 
-        i++;
-
-        down = i < 12;
-
-        if (down) {
-            x += this.fieldWidth;
-            if (i === 6) {
-                x += this.horizontalSpacing;
-            }
-            y = 0;
+    for (let i = 0; i < this.fields.length; i++) {
+        for (let j = 0; j < stones[i].white; j++) {
+            this.fields[i].pushStone('white');
         }
-        else {
-            if (i != 12) {
-                x -= this.fieldWidth;
-            }
-            if (i === 18) {
-                x -= this.horizontalSpacing;
-            }
-            y = this.height;
+        for (let j = 0; j < stones[i].black; j++) {
+            this.fields[i].pushStone('black');
         }
+    }
+};
+
+let Field = function (args) {
+    this.board = args.board;
+    this.x = args.x; // top left corner if isTop, else bottom left corner
+    this.isTop = args.isTop;
+    this.isWhite = args.isWhite;
+
+    let fieldDiff = 5
+    this.stoneRadius = this.board.fieldWidth / 2 - fieldDiff;
+    this.xCenter = this.x + this.board.fieldWidth / 2;
+    this.yStart = this.isTop ? 0 : this.board.height;
+    this.node = this._buildNode();
+    this.slots = this._buildSlots();
+};
+
+Field.prototype._buildNode = function() {
+    let xEnd = this.x + this.board.fieldWidth;
+    let yEnd = this.isTop
+        ? this.yStart + this.board.fieldHeight
+        : this.yStart - this.board.fieldHeight;
+
+    return this.board.svg.create({
+        name: 'polygon',
+        attrs: {
+            'points': [[this.x, this.yStart], [this.xCenter, yEnd], [xEnd, this.yStart]],
+            'stroke': 'black',
+            'stroke-width': .2,
+            'stroke-linecap': 'round',
+            'fill': this.isWhite ? 'white' : 'black',
+            'fill-opacity': .75,
+        },
+    });
+};
+
+Field.prototype._buildSlots = function() {
+    let slots = [];
+
+    let cx = this.x + this.board.fieldWidth / 2;
+    let cy = this.isTop ? this.yStart + this.stoneRadius : this.yStart - this.stoneRadius;
+    for (let i = 0; i < 5; i++) {
+        slots.push({
+            cx: cx,
+            cy: cy,
+            stone: undefined,
+        });
+        cy = this.isTop ? cy + this.stoneRadius * 2 : cy - this.stoneRadius * 2;
+    }
+
+    return slots;
+};
+
+Field.prototype.pushStone = function(color) {
+    let nextIdx = this.slots.findIndex((slot) => !slot.stone);
+    let slot = this.slots[nextIdx];
+
+    let node = this.board.svg.create({
+        name: 'circle',
+        attrs: {
+            'cx': slot.cx,
+            'cy': slot.cy,
+            'r': this.stoneRadius,
+            'fill': color,
+            'stroke': color === 'black' ? 'white' : 'black',
+            'stroke-width': .4,
+        },
+    });
+
+    slot.stone = node;
+
+    this.board.svg.append({
+        node: node,
+        to: this.board.svg.root,
     });
 };
