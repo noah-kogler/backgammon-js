@@ -1,4 +1,4 @@
-let SVG = function(args) {
+let SVG = function(args) { // args: width, height
     this.width = args.width;
     this.height = args.height;
     this.ns = "http://www.w3.org/2000/svg";
@@ -15,7 +15,7 @@ SVG.prototype._build_root = function() {
     return root;
 };
 
-SVG.prototype.create = function(args) {
+SVG.prototype.create = function(args) { // args: name, attrs
     let node = document.createElementNS(this.ns, args.name);
     Object.keys(args.attrs).forEach((key) => {
         let rawValue = args.attrs[key];
@@ -32,8 +32,23 @@ SVG.prototype.create = function(args) {
     return node;
 };
 
-SVG.prototype.append = function(args) {
+SVG.prototype.append = function(args) { // args: to, node
     args.to.appendChild(args.node);
+};
+
+SVG.prototype.changeAttrs = function(args) { // args: of, to
+    Object.keys(args.to).forEach((key) => {
+        let rawValue = args.to[key];
+        let value;
+        if (Array.isArray(rawValue)) {
+            value = this._collapsePoints(rawValue);
+        }
+        else {
+            value = rawValue;
+        }
+
+        args.of.setAttributeNS(null, key, value);
+    });
 };
 
 SVG.prototype._collapsePoints = function(points) {

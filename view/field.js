@@ -1,4 +1,4 @@
-let Field = function (args) {
+let Field = function (args) { // args: board, x, isTop, isWhite
     this.board = args.board;
     this.x = args.x; // top left corner if isTop, else bottom left corner
     this.isTop = args.isTop;
@@ -59,15 +59,40 @@ Field.prototype.pushStone = function(color) {
             'cy': slot.cy,
             'r': this.stoneRadius,
             'fill': color,
-            'stroke': color === 'black' ? 'white' : 'black',
+            'stroke': 'grey',
             'stroke-width': .4,
         },
     });
 
-    slot.stone = node;
+    slot.stone = { node: node, color: color };
 
     this.board.svg.append({
         node: node,
         to: this.board.svg.root,
     });
+};
+
+Field.prototype.initStoneInteraction = function(playerColor) {
+    for (let i = 0; i < this.slots.length; i++) {
+        let slot = this.slots[i];
+        let nextSlot = i + 1 < this.slots.length ? this.slots[i + 1] : undefined;
+
+        let strokeColor;
+        if (nextSlot && nextSlot.stone) {
+            strokeColor = 'red';
+        }
+        else {
+            strokeColor = 'green';
+        }
+
+        if (slot.stone && slot.stone.color === playerColor) {
+            this.board.svg.changeAttrs({
+                of: slot.stone.node,
+                to: {
+                    stroke: strokeColor,
+                    'stroke-width': 2
+                }
+            });
+        }
+    }
 };

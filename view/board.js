@@ -1,4 +1,4 @@
-let Board = function (args) {
+let Board = function (args) { // args: width, height, verticalSpacing, horizontalSpacing
     this.width = args.width;
     this.height = args.height;
     this.verticalSpacing = args.verticalSpacing;
@@ -77,7 +77,7 @@ Board.prototype._buildCenterBox = function() {
     });
 };
 
-Board.prototype.drawStatics = function(args) {
+Board.prototype.drawStatics = function(args) { // args: to
     this.svg.append({ node: this.backgroundBox, to: this.svg.root });
 
     this.fields.forEach((field) => { this.svg.append({ node: field.node, to: this.svg.root }) });
@@ -102,4 +102,8 @@ Board.prototype.drawStones = function(stones) {
             this.fields[i].pushStone('black');
         }
     }
+};
+
+Board.prototype.initStoneInteraction = function(color) {
+    this.fields.forEach((field) => { field.initStoneInteraction(color) });
 };
