@@ -105,18 +105,22 @@ Board.prototype.drawStones = function(stones) {
     }
 };
 
-Board.prototype.initStoneInteraction = function(color) {
-    this.fields.forEach((field) => { field.initStoneInteraction(color) });
+Board.prototype.initStoneSelection = function(player) {
+    this.fields.forEach((field) => {
+        field.initStoneSelection(player);
+    });
 };
 
-Board.prototype.markPossibleTargets = function(startIdx) {
-    for (let i = 0; i < this.fields.length; i++) {
-        if (this.game.isMovable({ from: startIdx, to: i })) {
-            this.fields[i].showTargetMarker();
-        }
-    }
+Board.prototype.stopStoneSelection = function(player) {
+    this.fields.forEach((field) => {
+        field.stopStoneSelection();
+    });
 };
 
-Board.prototype.removePossibleTargetMarks = function() {
-    this.fields.forEach((field) => { field.removeTargetMarker(); });
+Board.prototype.initTargetSelection = function(player, index) {
+    // body...
+};
+
+Board.prototype.stopTargetSelection = function(player, index) {
+    // body...
 };

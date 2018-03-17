@@ -9,7 +9,7 @@ Game.prototype.start = function() {
     this.board.drawStatics({ to: document.body });
     this.board.drawStones(this.move.stones);
 
-    this.board.initStoneInteraction('white'); // for debugging
+    this.board.initStoneSelection('white'); // for debugging
 };
 
 Game.prototype.isMovable = function(args) { // args: from[, to]
