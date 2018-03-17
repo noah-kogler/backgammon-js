@@ -3,6 +3,8 @@ let Stone = function (args) { // args: slot, color
     this.color = args.color;
     this.board = this.slot.board;
     this.liftHeight = 10;
+    this.stroke = 'grey';
+    this.strokeWidth = .4;
     this.node = this._buildNode();
     this.selected = false;
     this.onClick = undefined;
@@ -16,8 +18,8 @@ Stone.prototype._buildNode = function() {
             'cy': this.slot.cy,
             'r': this.slot.radius,
             'fill': this.color,
-            'stroke': 'grey',
-            'stroke-width': .4,
+            'stroke': this.stroke,
+            'stroke-width': this.strokeWidth,
         },
     });
 };
@@ -29,7 +31,7 @@ Stone.prototype.show = function() {
     });
 };
 
-Stone.prototype.mark = function(isMovable) {
+Stone.prototype.addStoneSelectionMark = function(isMovable) {
     this.board.svg.changeAttrs({
         of: this.node,
         to: {
@@ -43,13 +45,23 @@ Stone.prototype.mark = function(isMovable) {
     }
 };
 
+Stone.prototype.removeStoneSelectionMark = function() {
+    this.board.svg.changeAttrs({
+        of: this.node,
+        to: {
+            stroke: this.stroke,
+            'stroke-width': this.strokeWidth,
+        }
+    });
+};
+
 Stone.prototype.addSelector = function() {
     this.node.removeEventListener('click', this.onClick);
 
     this.onClick = function (event) {
         this._select();
-        // this.board.stopTargetSelection(player, this.index);
-        // this.board.stopStoneSelection(this, player);
+        this.board.stopStoneSelection();
+        this.board.startTargetSelection(this.slot.field.index);
         this.addDeselector();
     }.bind(this);
     this.node.addEventListener('click', this.onClick);
@@ -60,8 +72,8 @@ Stone.prototype.addDeselector = function() {
 
     this.onClick = function (event) {
         this._deselect();
-        // this.board.stopTargetSelection(player, this.index);
-        // this.board.initStoneSelection(player);
+        this.board.startStoneSelection(this.color);
+        this.board.stopTargetSelection();
         this.addSelector();
     }.bind(this);
     this.node.addEventListener('click', this.onClick);

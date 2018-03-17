@@ -105,22 +105,26 @@ Board.prototype.drawStones = function(stones) {
     }
 };
 
-Board.prototype.initStoneSelection = function(player) {
+Board.prototype.startStoneSelection = function(player) {
     this.fields.forEach((field) => {
-        field.initStoneSelection(player);
+        field.startStoneSelection(player);
     });
 };
 
-Board.prototype.stopStoneSelection = function(player) {
+Board.prototype.stopStoneSelection = function() {
     this.fields.forEach((field) => {
         field.stopStoneSelection();
     });
 };
 
-Board.prototype.initTargetSelection = function(player, index) {
-    // body...
+Board.prototype.startTargetSelection = function(selectedFieldIndex) {
+    this.fields.forEach((field) => {
+        field.startTargetSelection(selectedFieldIndex);
+    });
 };
 
-Board.prototype.stopTargetSelection = function(player, index) {
-    // body...
+Board.prototype.stopTargetSelection = function() {
+    this.fields.forEach((field) => {
+        field.stopTargetSelection();
+    });
 };

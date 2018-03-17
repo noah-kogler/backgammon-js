@@ -40,11 +40,10 @@ Field.prototype._buildSlots = function() {
     for (let i = 0; i < 5; i++) {
         slots.push(
             new Slot({
-                board: this.board,
+                field: this,
                 radius: radius,
                 cx: cx,
                 cy: cy,
-                isTop: this.isTop,
             })
         );
         cy = this.isTop ? cy + radius * 2 : cy - radius * 2;
@@ -55,10 +54,10 @@ Field.prototype._buildSlots = function() {
 
 Field.prototype.pushStone = function(color) {
     let slot = this._nextSlot();
-    slot.showStone(color);
+    slot.addStone(color);
 };
 
-Field.prototype.initStoneSelection = function(player) {
+Field.prototype.startStoneSelection = function(player) {
     for (let i = 0; i < this.slots.length; i++) {
         let slot = this.slots[i];
 
@@ -67,44 +66,29 @@ Field.prototype.initStoneSelection = function(player) {
             let isMovable = !(nextSlot && nextSlot.stone)
                 && this.board.game.isMovable({ from: i });
 
-            slot.markStone(isMovable);
+            slot.stone.addStoneSelectionMark(isMovable);
         }
     }
 };
 
 Field.prototype.stopStoneSelection = function() {
     this.slots.forEach((slot) => {
-        slot.removeStoneSelector();
+        if (slot.stone && !slot.stone.selected) {
+            slot.stone.removeStoneSelectionMark();
+        }
     });
 };
 
-Field.prototype.showTargetMarker = function() {
-    let slot = this._nextSlot();
-
-    this.targetMarker = this.board.svg.create({
-        name: 'circle',
-        attrs: {
-            'cx': slot.cx,
-            'cy': slot.cy,
-            'r': this.stoneRadius,
-            'stroke': 'green',
-            'stroke-width': 2,
-            'stroke-dasharray': '2,2',
-            'fill-opacity': 0,
-        },
-    });
-
-    this.board.svg.append({
-        node: this.targetMarker,
-        to: this.board.svg.root,
-    });
-};
-
-Field.prototype.removeTargetMarker = function() {
-    if (this.targetMarker) {
-        this.targetMarker.parentNode.removeChild(this.targetMarker);
-        this.targetMarker = undefined;
+Field.prototype.startTargetSelection = function(selectedFieldIndex) {
+    if (this.board.game.isMovable({ from: selectedFieldIndex, to: this.index })) {
+        this._nextSlot().addTargetMarker();
     }
+};
+
+Field.prototype.stopTargetSelection = function() {
+    this.slots.forEach((slot) => {
+        slot.removeTargetMarker();
+    });
 };
 
 Field.prototype._nextSlot = function() {
