@@ -36,6 +36,16 @@ SVG.prototype.append = function(args) { // args: to, node
     args.to.appendChild(args.node);
 };
 
+SVG.prototype.setText = function(args) { // args: to, node
+    // clears all content before
+    while (args.node.firstChild) {
+        args.node.removeChild(args.node.firstChild);
+    }
+    args.node.appendChild(
+        document.createTextNode(args.to)
+    );
+};
+
 SVG.prototype.changeAttrs = function(args) { // args: of, to
     Object.keys(args.to).forEach((key) => {
         let rawValue = args.to[key];

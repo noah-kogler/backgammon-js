@@ -9,6 +9,8 @@ let Board = function (args) { // args: width, height, verticalSpacing, horizonta
     this.fields = this._buildFields();
     this.centerBox = this._buildCenterBox();
     this.backgroundBox = this._buildBackgroundBox();
+    this.diceStats = this._buildDiceStats();
+    this.currentActionStats = this._buildCurrentActionStats();
     this.game = undefined; // gets set when a game is initialized with this board
 };
 
@@ -78,6 +80,30 @@ Board.prototype._buildCenterBox = function() {
     });
 };
 
+Board.prototype._buildDiceStats = function() {
+    return this.svg.create({
+        name: 'text',
+        attrs: {
+            'x': 0,
+            'y': 0,
+            'font-family': 'Verdana',
+            'font-size': '10',
+        },
+    });
+};
+
+Board.prototype._buildCurrentActionStats = function() {
+    return this.svg.create({
+        name: 'text',
+        attrs: {
+            'x': this.width / 2 + this.horizontalSpacing / 2,
+            'y': 0,
+            'font-family': 'Verdana',
+            'font-size': '10',
+        },
+    });
+};
+
 Board.prototype.drawStatics = function(args) { // args: to
     this.svg.append({ node: this.backgroundBox, to: this.svg.root });
 
@@ -85,6 +111,11 @@ Board.prototype.drawStatics = function(args) { // args: to
     this.svg.append({ node: this.centerBox, to: this.svg.root });
 
     this.svg.append({ node: this.svg.root, to: args.to });
+};
+
+Board.prototype.drawStats = function(args) { // args: to
+    this.svg.append({ node: this.diceStats, to: this.svg.root });
+    this.svg.append({ node: this.currentActionStats, to: this.svg.root });
 };
 
 Board.prototype.drawStones = function(stones) {
@@ -105,9 +136,26 @@ Board.prototype.drawStones = function(stones) {
     }
 };
 
-Board.prototype.startStoneSelection = function(player) {
+Board.prototype.requestDice = function() {
+    this._setCurrentActionStats('Roll the dice!');
+    return new Promise((resolve, reject) => {
+        this.svg.setText({ node: this.diceStats, to: 'roll' });
+
+        var onDiceRolled = (event) => {
+            var result = this.game.rollDice();
+
+            this.svg.setText({ node: this.diceStats, to: result[0] + ' ' + result[1] });
+            this.diceStats.removeEventListener('click', onDiceRolled);
+            resolve();
+        };
+        this.diceStats.addEventListener('click', onDiceRolled);
+    });
+};
+
+Board.prototype.startStoneSelection = function() {
+    this._setCurrentActionStats('Select a Stone!');
     this.fields.forEach((field) => {
-        field.startStoneSelection(player);
+        field.startStoneSelection(this.game.currentPlayerColor());
     });
 };
 
@@ -118,6 +166,7 @@ Board.prototype.stopStoneSelection = function() {
 };
 
 Board.prototype.startTargetSelection = function(selectedFieldIndex) {
+    this._setCurrentActionStats('Select a Target!');
     this.fields.forEach((field) => {
         field.startTargetSelection(selectedFieldIndex);
     });
@@ -126,5 +175,12 @@ Board.prototype.startTargetSelection = function(selectedFieldIndex) {
 Board.prototype.stopTargetSelection = function() {
     this.fields.forEach((field) => {
         field.stopTargetSelection();
+    });
+};
+
+Board.prototype._setCurrentActionStats = function(action) {
+    this.svg.setText({
+        node: this.currentActionStats,
+        to: this.game.currentPlayerColor() + ': ' + action,
     });
 };

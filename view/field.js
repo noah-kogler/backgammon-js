@@ -57,11 +57,11 @@ Field.prototype.pushStone = function(color) {
     slot.addStone(color);
 };
 
-Field.prototype.startStoneSelection = function(player) {
+Field.prototype.startStoneSelection = function(playerColor) {
     for (let i = 0; i < this.slots.length; i++) {
         let slot = this.slots[i];
 
-        if (slot.stone && slot.stone.color === player) {
+        if (slot.stone && slot.stone.color === playerColor) {
             let nextSlot = i + 1 < this.slots.length ? this.slots[i + 1] : undefined;
             let isMovable = !(nextSlot && nextSlot.stone)
                 && this.board.game.isMovable({ from: i });

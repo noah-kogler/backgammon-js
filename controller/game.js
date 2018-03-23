@@ -8,8 +8,24 @@ let Game = function (args) { // args: board
 Game.prototype.start = function() {
     this.board.drawStatics({ to: document.body });
     this.board.drawStones(this.move.stones);
+    this.board.drawStats({ to: document.body });
 
-    this.board.startStoneSelection('white'); // for debugging
+    this.board.requestDice()
+        .then((result) => {
+            this.board.startStoneSelection();
+        });
+};
+
+Game.prototype.currentPlayerColor = function() {
+    return this.move.player;
+};
+
+Game.prototype.rollDice = function() {
+    this.move.dice = [
+        this._rollSingleDice(),
+        this._rollSingleDice(),
+    ];
+    return this.move.dice;
 };
 
 Game.prototype.isMovable = function(args) { // args: from[, to]
@@ -30,4 +46,10 @@ Game.prototype.isMovable = function(args) { // args: from[, to]
     else {
         return false;
     }
+};
+
+Game.prototype._rollSingleDice = function() {
+    var min = 1;
+    var max = 6;
+    return Math.floor(Math.random() * (max - min)) + min;
 };
