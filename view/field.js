@@ -1,11 +1,12 @@
-let Field = function (args) { // args: board, index, x, isTop, isWhite
+let Field = function (args) { // args: board, index, x, y, isTop, isWhite
     this.board = args.board;
     this.index = args.index;
     this.x = args.x; // top left corner if isTop, else bottom left corner
+    this.y = args.y
     this.isTop = args.isTop;
     this.isWhite = args.isWhite;
     this.xCenter = this.x + this.board.fieldWidth / 2;
-    this.yStart = this.isTop ? 0 : this.board.height;
+    this.yStart = this.isTop ? this.y : this.board.height;
     this.node = this._buildNode();
     this.slots = this._buildSlots();
     this.targetMarker = undefined;
@@ -33,7 +34,7 @@ Field.prototype._buildNode = function() {
 Field.prototype._buildSlots = function() {
     let slots = [];
 
-    let fieldDiff = 5
+    let fieldDiff = 6;
     let radius = this.board.fieldWidth / 2 - fieldDiff;
     let cx = this.x + this.board.fieldWidth / 2;
     let cy = this.isTop ? this.yStart + radius : this.yStart - radius;

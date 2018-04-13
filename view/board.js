@@ -1,4 +1,6 @@
-let Board = function (args) { // args: width, height, verticalSpacing, horizontalSpacing
+let Board = function (args) { // args: x, y, width, height, verticalSpacing, horizontalSpacing
+    this.x = args.x;
+    this.y = args.y;
     this.width = args.width;
     this.height = args.height;
     this.verticalSpacing = args.verticalSpacing;
@@ -22,8 +24,8 @@ Board.prototype._buildBackgroundBox = function() {
     return this.svg.create({
         name: 'rect',
         attrs: {
-            'x': 0,
-            'y': 0,
+            'x': this.x,
+            'y': this.y,
             'width': this.width,
             'height': this.height,
             'stroke': 'black',
@@ -36,12 +38,12 @@ Board.prototype._buildBackgroundBox = function() {
 Board.prototype._buildFields = function() {
     let fields = [];
 
-    let x = 0;
+    let x = this.x;
     let isTop = true;
     let isWhite = true;
     for (let i = 0; i < 24; i++) {
         fields.push(
-            new Field({ board: this, index: i, x: x, isTop: isTop, isWhite: isWhite })
+            new Field({ board: this, index: i, x: x, y: this.y, isTop: isTop, isWhite: isWhite })
         );
 
         isWhite = !isWhite;
@@ -71,7 +73,7 @@ Board.prototype._buildCenterBox = function() {
         name: 'rect',
         attrs: {
             'x': this.width / 2 - this.horizontalSpacing / 2,
-            'y': 0,
+            'y': this.y,
             'width': this.horizontalSpacing,
             'height': this.height,
             'fill': 'black',
@@ -85,7 +87,7 @@ Board.prototype._buildDiceStats = function() {
         name: 'text',
         attrs: {
             'x': 0,
-            'y': 0,
+            'y': 10,
             'font-family': 'Verdana',
             'font-size': '10',
         },
@@ -97,7 +99,7 @@ Board.prototype._buildCurrentActionStats = function() {
         name: 'text',
         attrs: {
             'x': this.width / 2 + this.horizontalSpacing / 2,
-            'y': 0,
+            'y': 10,
             'font-family': 'Verdana',
             'font-size': '10',
         },
