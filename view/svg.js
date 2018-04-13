@@ -11,7 +11,6 @@ SVG.prototype._build_root = function() {
     root.setAttribute('version', '1.1');
     root.setAttribute('viewBox', this._collapsePoints([[0, 0, this.width, this.height]]));
     root.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    root.setAttribute('style', 'width:90%; height:90%; position:absolute; top:5%; left:5%; z-index:-1;');
     return root;
 };
 
