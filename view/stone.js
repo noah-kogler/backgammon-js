@@ -1,8 +1,11 @@
-let Stone = function (args) { // args: slot, field, color
+let Stone = function (args) { // args: svg, game, slot, field, color
+    View.call(this, {
+        svg: args.svg,
+        game: args.game,
+    });
     this.slot = args.slot;
     this.field = args.field;
     this.color = args.color;
-    this.board = this.slot.board;
     this.liftHeight = 10;
     this.stroke = 'grey';
     this.strokeWidth = .4;
@@ -14,12 +17,16 @@ let Stone = function (args) { // args: slot, field, color
         slotIndex: this.slot.index,
     };
 
-    this.board.game.addEventListener('onSelectStone', this.onSelectStone.bind(this));
-    this.board.game.addEventListener('onStoneSelected', this.onStoneSelected.bind(this));
+    this.addGameEventListeners([
+        'onSelectStone',
+        'onStoneSelected',
+    ]);
 };
+Stone.prototype = Object.create(View.prototype);
+Stone.prototype.constructor = Stone;
 
 Stone.prototype._buildNode = function() {
-    return this.board.svg.create({
+    return this.svg.create({
         name: 'circle',
         attrs: {
             'cx': this.slot.cx,
@@ -33,9 +40,9 @@ Stone.prototype._buildNode = function() {
 };
 
 Stone.prototype.show = function() {
-    this.board.svg.append({
+    this.svg.append({
         node: this.node,
-        to: this.board.svg.root,
+        to: this.svg.root,
     });
 };
 
@@ -43,10 +50,10 @@ Stone.prototype.onSelectStone = function(selectedStoneData) {
     if (selectedStoneData && this._dataEquals(selectedStoneData)) {
         this._deselect();
     }
-    if (this.color == this.board.game.currentPlayerColor()) {
-        let isSelectable = this.board.game.isStoneSelectable(this.data);
+    if (this.color == this.game.currentPlayerColor()) {
+        let isSelectable = this.game.isStoneSelectable(this.data);
 
-        this.board.svg.changeAttrs({
+        this.svg.changeAttrs({
             of: this.node,
             to: {
                 stroke: isSelectable ? 'green' : 'red',
@@ -55,7 +62,7 @@ Stone.prototype.onSelectStone = function(selectedStoneData) {
         });
 
         if (isSelectable) {
-            this._replaceOnClickEventListener((event) => { this.board.game.selectStone(this.data); });
+            this._replaceOnClickEventListener((event) => { this.game.selectStone(this.data); });
         }
     }
 };
@@ -63,13 +70,13 @@ Stone.prototype.onSelectStone = function(selectedStoneData) {
 Stone.prototype.onStoneSelected = function(stoneData) {
     if (this._dataEquals(stoneData)) {
         this._select();
-        this._replaceOnClickEventListener((event) => { this.board.game.deselectStone(this.data); });
+        this._replaceOnClickEventListener((event) => { this.game.deselectStone(this.data); });
     }
     else {
         this.node.removeEventListener('click', this.onClick);
     }
 
-    this.board.svg.changeAttrs({
+    this.svg.changeAttrs({
         of: this.node,
         to: {
             stroke: this.stroke,
@@ -79,7 +86,7 @@ Stone.prototype.onStoneSelected = function(stoneData) {
 };
 
 Stone.prototype._select = function() {
-    this.board.svg.changeAttrs({
+    this.svg.changeAttrs({
         of: this.node,
         to: {
             cy: this.slot.isTop
@@ -92,7 +99,7 @@ Stone.prototype._select = function() {
 };
 
 Stone.prototype._deselect = function() {
-    this.board.svg.changeAttrs({
+    this.svg.changeAttrs({
         of: this.node,
         to: { cy: this.slot.cy },
     });

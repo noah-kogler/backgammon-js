@@ -1,24 +1,30 @@
-let Field = function (args) { // args: board, index, x, y, isTop, isWhite
-    this.board = args.board;
+let Field = function (args) { // args: svg, game, index, x, boardY, width, height, isTop, isWhite
+    View.call(this, {
+        svg: args.svg,
+        game: args.game,
+    });
     this.index = args.index;
     this.x = args.x; // top left corner if isTop, else bottom left corner
-    this.y = args.y
+    this.width = args.width;
+    this.height = args.height;
     this.isTop = args.isTop;
     this.isWhite = args.isWhite;
-    this.xCenter = this.x + this.board.fieldWidth / 2;
-    this.yStart = this.isTop ? this.y : this.board.height + this.board.y;
+    this.xCenter = this.x + this.width / 2;
+    this.yStart = this.isTop ? args.boardY : this.totalHeight() + args.boardY;
     this.node = this._buildNode();
     this.slots = this._buildSlots();
     this.targetMarker = undefined;
 };
+Field.prototype = Object.create(View.prototype);
+Field.prototype.constructor = Field;
 
 Field.prototype._buildNode = function() {
-    let xEnd = this.x + this.board.fieldWidth;
+    let xEnd = this.x + this.width;
     let yEnd = this.isTop
-        ? this.yStart + this.board.fieldHeight
-        : this.yStart - this.board.fieldHeight;
+        ? this.yStart + this.height
+        : this.yStart - this.height;
 
-    return this.board.svg.create({
+    return this.svg.create({
         name: 'polygon',
         attrs: {
             'points': [[this.x, this.yStart], [this.xCenter, yEnd], [xEnd, this.yStart]],
@@ -35,12 +41,14 @@ Field.prototype._buildSlots = function() {
     let slots = [];
 
     let fieldDiff = 6;
-    let radius = this.board.fieldWidth / 2 - fieldDiff;
-    let cx = this.x + this.board.fieldWidth / 2;
+    let radius = this.width / 2 - fieldDiff;
+    let cx = this.x + this.width / 2;
     let cy = this.isTop ? this.yStart + radius : this.yStart - radius;
     for (let i = 0; i < 5; i++) {
         slots.push(
             new Slot({
+                svg: this.svg,
+                game: this.game,
                 field: this,
                 index: i,
                 radius: radius,

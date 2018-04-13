@@ -1,11 +1,14 @@
-let Slot = function (args) { // args: field, index, radius, cx, cy
+let Slot = function (args) { // args: svg, game, field, index, radius, cx, cy
+    View.call(this, {
+        svg: args.svg,
+        game: args.game,
+    });
     this.field = args.field;
     this.index = args.index;
     this.radius = args.radius;
     this.cx = args.cx;
     this.cy = args.cy;
     this.isTop = this.field.isTop;
-    this.board = this.field.board;
     this.stone = undefined;
     this.targetMarker = undefined;
     this.targetMarkerClickListener = undefined;
@@ -14,13 +17,19 @@ let Slot = function (args) { // args: field, index, radius, cx, cy
         slotIndex: this.index,
     };
 
-    this.board.game.addEventListener('onSelectStone', this.onSelectStone.bind(this));
-    this.board.game.addEventListener('onSelectTarget', this.onSelectTarget.bind(this));
-    this.board.game.addEventListener('onTargetSelected', this.onTargetSelected.bind(this));
+    this.addGameEventListeners([
+        'onSelectStone',
+        'onSelectTarget',
+        'onTargetSelected',
+    ]);
 };
+Slot.prototype = Object.create(View.prototype);
+Slot.prototype.constructor = Slot;
 
 Slot.prototype.addStone = function(color) {
     this.stone = new Stone({
+        svg: this.svg,
+        game: this.game,
         slot: this,
         field: this.field,
         color: color,
@@ -37,12 +46,12 @@ Slot.prototype.removeStone = function() {
 
 Slot.prototype.onSelectTarget = function(selectedStoneData) {
     if (
-        this.board.game.isStoneMovable(selectedStoneData, this.data)
+        this.game.isStoneMovable(selectedStoneData, this.data)
         && this.index === this.field.nextSlot().index
     ) {
         this.addTargetMarker();
         this.targetMarkerClickListener = (event) => {
-            this.board.game.selectTarget(selectedStoneData, this.data);
+            this.game.selectTarget(selectedStoneData, this.data);
         };
         this.targetMarker.addEventListener('click', this.targetMarkerClickListener);
     }
@@ -68,7 +77,7 @@ Slot.prototype.onTargetSelected = function(selectedStoneData, selectedTargetSlot
 };
 
 Slot.prototype.addTargetMarker = function() {
-    this.targetMarker = this.board.svg.create({
+    this.targetMarker = this.svg.create({
         name: 'circle',
         attrs: {
             'cx': this.cx,
@@ -81,9 +90,9 @@ Slot.prototype.addTargetMarker = function() {
         },
     });
 
-    this.board.svg.append({
+    this.svg.append({
         node: this.targetMarker,
-        to: this.board.svg.root,
+        to: this.svg.root,
     });
 };
 

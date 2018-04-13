@@ -1,14 +1,13 @@
-let Board = function (args) { // args: x, y, width, height, verticalSpacing, horizontalSpacing, game
+let Board = function (args) { // args: game, x, y, width, height, verticalSpacing, horizontalSpacing
+    View.call(this, {
+        svg: new SVG({ width: args.width, height: args.height }),
+        game: args.game,
+    });
     this.x = args.x;
     this.y = args.y;
-    this.width = args.width;
-    this.height = args.height;
     this.verticalSpacing = args.verticalSpacing;
     this.horizontalSpacing = args.horizontalSpacing;
-    this.game = args.game;
-    this.fieldWidth = (this.width - this.horizontalSpacing) / 12;
-    this.fieldHeight = (this.height - this.verticalSpacing) / 2;
-    this.svg = this._buildSvg();
+
     this.fields = this._buildFields();
     this.centerBox = this._buildCenterBox();
     this.backgroundBox = this._buildBackgroundBox();
@@ -16,16 +15,16 @@ let Board = function (args) { // args: x, y, width, height, verticalSpacing, hor
     this.currentActionStats = this._buildCurrentActionStats();
     this.onRollBtnClick = undefined;
 
-    this.game.addEventListener('onStart', this.onStart.bind(this));
-    this.game.addEventListener('onRollDice', this.onRollDice.bind(this));
-    this.game.addEventListener('onDiceRolled', this.onDiceRolled.bind(this));
-    this.game.addEventListener('onSelectStone', this.onSelectStone.bind(this));
-    this.game.addEventListener('onSelectTarget', this.onSelectTarget.bind(this));
+    this.addGameEventListeners([
+        'onStart',
+        'onRollDice',
+        'onDiceRolled',
+        'onSelectStone',
+        'onSelectTarget',
+    ]);
 };
-
-Board.prototype._buildSvg = function() {
-    return new SVG({ width: this.width, height: this.height });
-};
+Board.prototype = Object.create(View.prototype);
+Board.prototype.constructor = Board;
 
 Board.prototype._buildBackgroundBox = function() {
     return this.svg.create({
@@ -33,8 +32,8 @@ Board.prototype._buildBackgroundBox = function() {
         attrs: {
             'x': this.x,
             'y': this.y,
-            'width': this.width,
-            'height': this.height,
+            'width': this.totalWidth(),
+            'height': this.totalHeight(),
             'stroke': 'black',
             'fill': 'brown',
             'stroke-width': .4,
@@ -45,18 +44,30 @@ Board.prototype._buildBackgroundBox = function() {
 Board.prototype._buildFields = function() {
     let fields = [];
 
+    let fieldWidth = (this.totalWidth() - this.horizontalSpacing) / 12;
+    let fieldHeight = (this.totalHeight() - this.verticalSpacing) / 2;
     let x = this.x;
     let isTop = true;
     let isWhite = true;
     for (let i = 0; i < 24; i++) {
         fields.push(
-            new Field({ board: this, index: i, x: x, y: this.y, isTop: isTop, isWhite: isWhite })
+            new Field({
+                svg: this.svg,
+                game: this.game,
+                index: i,
+                x: x,
+                boardY: this.y,
+                width: fieldWidth,
+                height: fieldHeight,
+                isTop: isTop,
+                isWhite: isWhite
+            })
         );
 
         isWhite = !isWhite;
 
         if (i < 11) {
-            x += this.fieldWidth;
+            x += fieldWidth;
             if (i === 5) {
                 x += this.horizontalSpacing;
             }
@@ -65,7 +76,7 @@ Board.prototype._buildFields = function() {
             isTop = false;
         }
         else {
-            x -= this.fieldWidth;
+            x -= fieldWidth;
             if (i === 17) {
                 x -= this.horizontalSpacing;
             }
@@ -79,10 +90,10 @@ Board.prototype._buildCenterBox = function() {
     return this.svg.create({
         name: 'rect',
         attrs: {
-            'x': this.width / 2 - this.horizontalSpacing / 2,
+            'x': this.totalWidth() / 2 - this.horizontalSpacing / 2,
             'y': this.y,
             'width': this.horizontalSpacing,
-            'height': this.height,
+            'height': this.totalHeight(),
             'fill': 'black',
             'fill-opacity': .75,
         },
@@ -105,7 +116,7 @@ Board.prototype._buildCurrentActionStats = function() {
     return this.svg.create({
         name: 'text',
         attrs: {
-            'x': this.width / 2 + this.horizontalSpacing / 2,
+            'x': this.totalWidth() / 2 + this.horizontalSpacing / 2,
             'y': 10,
             'font-family': 'Verdana',
             'font-size': '10',
