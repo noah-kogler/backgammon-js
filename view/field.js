@@ -42,6 +42,7 @@ Field.prototype._buildSlots = function() {
         slots.push(
             new Slot({
                 field: this,
+                index: i,
                 radius: radius,
                 cx: cx,
                 cy: cy,
@@ -54,45 +55,11 @@ Field.prototype._buildSlots = function() {
 };
 
 Field.prototype.pushStone = function(color) {
-    let slot = this._nextSlot();
+    let slot = this.nextSlot();
     slot.addStone(color);
 };
 
-Field.prototype.startStoneSelection = function(playerColor) {
-    for (let i = 0; i < this.slots.length; i++) {
-        let slot = this.slots[i];
-
-        if (slot.stone && slot.stone.color === playerColor) {
-            let nextSlot = i + 1 < this.slots.length ? this.slots[i + 1] : undefined;
-            let isMovable = !(nextSlot && nextSlot.stone)
-                && this.board.game.isMovable({ from: i });
-
-            slot.stone.addStoneSelectionMark(isMovable);
-        }
-    }
-};
-
-Field.prototype.stopStoneSelection = function() {
-    this.slots.forEach((slot) => {
-        if (slot.stone && !slot.stone.selected) {
-            slot.stone.removeStoneSelectionMark();
-        }
-    });
-};
-
-Field.prototype.startTargetSelection = function(selectedFieldIndex) {
-    if (this.board.game.isMovable({ from: selectedFieldIndex, to: this.index })) {
-        this._nextSlot().addTargetMarker();
-    }
-};
-
-Field.prototype.stopTargetSelection = function() {
-    this.slots.forEach((slot) => {
-        slot.removeTargetMarker();
-    });
-};
-
-Field.prototype._nextSlot = function() {
+Field.prototype.nextSlot = function() {
     let nextIdx = this.slots.findIndex((slot) => !slot.stone);
     return this.slots[nextIdx];
 };

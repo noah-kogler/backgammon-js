@@ -1,19 +1,31 @@
-let Game = function (args) { // args: board
-    this.board = args.board;
+let Game = function (args) {
     this.move = Data.moves[0];
+    this.listeners = {}; // { type: [listeners] }
+};
 
-    this.board.game = this;
+// onStart(stones)
+// onRollDice()
+// onDiceRolled(result)
+// onSelectStone(optional: selectedStoneData)
+// onStoneSelected(selectedStoneData)
+// onSelectTarget(selectedStoneData)
+// onTargetSelected
+// onMoveStoneToTarget
+Game.prototype.addEventListener = function(type, listener) {
+    if (!this.listeners[type]) {
+        this.listeners[type] = [];
+    }
+    this.listeners[type].push(listener);
+};
+
+Game.prototype.fireEvent = function(type, eventObj) {
+    debugMsg('fireEvent: ' + type + ' ' + (eventObj ? JSON.stringify(eventObj) : ''));
+    this.listeners[type].forEach((listener) => { listener(eventObj); });
 };
 
 Game.prototype.start = function() {
-    this.board.drawStatics({ to: document.body });
-    this.board.drawStones(this.move.stones);
-    this.board.drawStats({ to: document.body });
-
-    this.board.requestDice()
-        .then((result) => {
-            this.board.startStoneSelection();
-        });
+    this.fireEvent('onStart', this.move.stones);
+    this.fireEvent('onRollDice');
 };
 
 Game.prototype.currentPlayerColor = function() {
@@ -25,22 +37,34 @@ Game.prototype.rollDice = function() {
         this._rollSingleDice(),
         this._rollSingleDice(),
     ];
-    return this.move.dice;
+    this.fireEvent('onDiceRolled', this.move.dice);
+    this.fireEvent('onSelectStone');
 };
 
-Game.prototype.isMovable = function(args) { // args: from[, to]
+Game.prototype.isStoneSelectable = function(stoneData) {
+    return stoneData.color == this.currentPlayerColor()
+        && stoneData.slotIndex == (this.move.stones[stoneData.fieldIndex][stoneData.color] - 1);
+};
+
+Game.prototype.selectStone = function(selectedStoneData) {
+    this.fireEvent('onStoneSelected', selectedStoneData);
+    this.fireEvent('onSelectTarget', selectedStoneData);
+};
+
+Game.prototype.deselectStone = function(selectedStoneData) {
+    this.fireEvent('onSelectStone', selectedStoneData);
+};
+
+Game.prototype.isStoneMovable = function(fromStoneData, toFieldData) {
     let player = this.move.player;
     let opponent = this.move.player === 'white' ? 'black' : 'white';
 
-    if (args.to === undefined) {
-        return true; // TODO is any move possible?
-    }
-
-    if (args.from === args.to) { // this wouldn't be a move
+    if (fromStoneData.fieldIndex === toFieldData.fieldIndex) { // this wouldn't be a move
         return false;
     }
 
-    if (this.move.stones[args.to][player] < 5 && this.move.stones[args.to][opponent] <= 1) {
+    let currentStones = this.move.stones[toFieldData.fieldIndex];
+    if (currentStones[player] < 5 && currentStones[opponent] <= 1) {
         return true;
     }
     else {
