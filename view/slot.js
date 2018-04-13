@@ -8,6 +8,7 @@ let Slot = function (args) { // args: field, index, radius, cx, cy
     this.board = this.field.board;
     this.stone = undefined;
     this.targetMarker = undefined;
+    this.targetMarkerClickListener = undefined;
     this.data = {
         fieldIndex: this.field.index,
         slotIndex: this.index,
@@ -15,6 +16,7 @@ let Slot = function (args) { // args: field, index, radius, cx, cy
 
     this.board.game.addEventListener('onSelectStone', this.onSelectStone.bind(this));
     this.board.game.addEventListener('onSelectTarget', this.onSelectTarget.bind(this));
+    this.board.game.addEventListener('onTargetSelected', this.onTargetSelected.bind(this));
 };
 
 Slot.prototype.addStone = function(color) {
@@ -26,12 +28,23 @@ Slot.prototype.addStone = function(color) {
     this.stone.show();
 };
 
+Slot.prototype.removeStone = function() {
+    if (this.stone) {
+        this.stone.node.parentNode.removeChild(this.stone.node);
+        this.stone = undefined;
+    }
+};
+
 Slot.prototype.onSelectTarget = function(selectedStoneData) {
     if (
         this.board.game.isStoneMovable(selectedStoneData, this.data)
         && this.index === this.field.nextSlot().index
     ) {
         this.addTargetMarker();
+        this.targetMarkerClickListener = (event) => {
+            this.board.game.selectTarget(selectedStoneData, this.data);
+        };
+        this.targetMarker.addEventListener('click', this.targetMarkerClickListener);
     }
 };
 
@@ -41,8 +54,20 @@ Slot.prototype.onSelectStone = function(selectedStoneData) {
     }
 };
 
+Slot.prototype.onTargetSelected = function(selectedStoneData, selectedTargetSlotData) {
+    if (this.stone && this.stone._dataEquals(selectedStoneData)) {
+        this.removeStone();
+    }
+
+    if (this.targetMarker) {
+        this.removeTargetMarker();
+    }
+    if (this._dataEquals(selectedTargetSlotData)) {
+        this.addStone(selectedStoneData.color);
+    }
+};
+
 Slot.prototype.addTargetMarker = function() {
-    // console.log('addTargetMarker' + this.field.index); // TODO why is this called twice per slot
     this.targetMarker = this.board.svg.create({
         name: 'circle',
         attrs: {
@@ -65,4 +90,9 @@ Slot.prototype.addTargetMarker = function() {
 Slot.prototype.removeTargetMarker = function() {
     this.targetMarker.parentNode.removeChild(this.targetMarker);
     this.targetMarker = undefined;
+};
+
+Slot.prototype._dataEquals = function(slotData) {
+    return slotData.fieldIndex == this.data.fieldIndex
+        && slotData.slotIndex == this.data.slotIndex;
 };
