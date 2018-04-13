@@ -65,20 +65,24 @@ Game.prototype.selectTarget = function(selectedStoneData, selectedTargetSlotData
 };
 
 Game.prototype.isStoneMovable = function(fromStoneData, toFieldData) {
-    let player = this.move.player;
-    let opponent = this._opponent();
-
     if (fromStoneData.fieldIndex === toFieldData.fieldIndex) { // this wouldn't be a move
         return false;
     }
 
+    let player = this.move.player;
+    let opponent = this._opponent();
+    let fieldDifference = player === 'white'
+        ? toFieldData.fieldIndex - fromStoneData.fieldIndex
+        : fromStoneData.fieldIndex - toFieldData.fieldIndex;
     let currentStones = this.move.stones[toFieldData.fieldIndex];
-    if (currentStones[player] < 5 && currentStones[opponent] <= 1) {
-        return true;
-    }
-    else {
-        return false;
-    }
+    return (
+        currentStones[player] < 5
+        && currentStones[opponent] <= 1
+        && (
+            this.move.dice[0] === fieldDifference
+            || this.move.dice[1] === fieldDifference
+        )
+    );
 };
 
 Game.prototype._rollSingleDice = function() {
