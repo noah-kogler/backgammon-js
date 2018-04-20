@@ -67,12 +67,12 @@ Slot.prototype.onTargetSelected = function(selectedStoneData, selectedTargetSlot
     if (this.stone && this.stone._dataEquals(selectedStoneData)) {
         this.removeStone();
     }
+    if (this._dataEquals(selectedTargetSlotData)) {
+        this.addStone(selectedStoneData.color);
+    }
 
     if (this.targetMarker) {
         this.removeTargetMarker();
-    }
-    if (this._dataEquals(selectedTargetSlotData)) {
-        this.addStone(selectedStoneData.color);
     }
 };
 

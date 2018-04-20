@@ -16,12 +16,12 @@ document.addEventListener('DOMContentLoaded', function () {
     game.start();
 });
 
-function debugMsg (msg) {
+function debugMsg(msg) {
     if (debugMode) {
         console.log(msg);
     }
 }
 
-function errorMsg (msg) {
+function errorMsg(msg) {
     console.error(msg);
 }

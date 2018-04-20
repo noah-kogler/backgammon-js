@@ -1,5 +1,6 @@
 let Game = function (args) {
     this.move = Data.moves[0];
+    this.usedDiceIndex = 0;
     this.listeners = {}; // { type: [listeners] }
 };
 
@@ -57,11 +58,29 @@ Game.prototype.deselectStone = function(selectedStoneData) {
 Game.prototype.selectTarget = function(selectedStoneData, selectedTargetSlotData) {
     this.fireEvent('onTargetSelected', selectedStoneData, selectedTargetSlotData);
 
-    // TODO move stone in Data.move !!!
-    // then push a new move!
-    this.move.player = this._opponent();
+    // TODO validation!
 
-    this.fireEvent('onRollDice');
+    this.move.stones[selectedStoneData.fieldIndex][this.move.player] -= 1;
+    this.move.stones[selectedTargetSlotData.fieldIndex][this.move.player] += 1;
+
+    if (this._isMoveDone()) {
+        let newMove = Data.deepCopy(this.move);
+        newMove.player = this._opponent();
+        newMove.dice = [ undefined, undefined ];
+        Data.moves.push(newMove);
+
+        this.usedDiceIndex = 0;
+
+        this.move = newMove;
+        debugMsg('started new move: ' + JSON.stringify(this.move));
+
+        this.fireEvent('onRollDice');
+    }
+    else {
+        this.usedDiceIndex += 1;
+
+        this.fireEvent('onSelectStone');
+    }
 };
 
 Game.prototype.isStoneMovable = function(fromStoneData, toFieldData) {
@@ -93,4 +112,10 @@ Game.prototype._rollSingleDice = function() {
 
 Game.prototype._opponent = function() {
     return this.move.player === 'white' ? 'black' : 'white';
+};
+
+Game.prototype._isMoveDone = function() {
+    let diceIndexLimit = this.move.dice[0] === this.move.dice[1] ? 3 : 1;
+    debugMsg("Check if move is done: " + this.usedDiceIndex + " >= " + diceIndexLimit);
+    return this.usedDiceIndex >= diceIndexLimit;
 };
