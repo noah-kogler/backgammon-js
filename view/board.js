@@ -34,9 +34,9 @@ Board.prototype._buildBackgroundBox = function() {
             'y': this.y,
             'width': this.totalWidth(),
             'height': this.totalHeight(),
-            'stroke': 'black',
-            'fill': 'brown',
-            'stroke-width': .4,
+            'stroke': '#685954',
+            'stroke-width': 2,
+            'fill': '#BEA192',
         },
     });
 };

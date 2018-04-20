@@ -28,11 +28,10 @@ Field.prototype._buildNode = function() {
         name: 'polygon',
         attrs: {
             'points': [[this.x, this.yStart], [this.xCenter, yEnd], [xEnd, this.yStart]],
-            'stroke': 'black',
+            'stroke': '#685954',
             'stroke-width': .2,
-            'stroke-linecap': 'round',
             'fill': this.isWhite ? 'white' : 'black',
-            'fill-opacity': .75,
+            'fill-opacity': .5,
         },
     });
 };
