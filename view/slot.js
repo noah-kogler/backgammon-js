@@ -46,7 +46,7 @@ Slot.prototype.removeStone = function() {
 
 Slot.prototype.onSelectTarget = function(selectedStoneData) {
     if (
-        this.game.isStoneMovable(selectedStoneData, this.data)
+        this.game.isStoneMovable(selectedStoneData.fieldIndex, this.data.fieldIndex)
         && this.index === this.field.nextSlot().index
     ) {
         this.addTargetMarker();

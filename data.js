@@ -49,6 +49,6 @@ Data.moves = [
 ];
 
 // This doesn't preserve type-information and non-derializable attributes.
-Data.deepCopy = function (obj) {
+Data.deepCopy = function(obj) {
     return JSON.parse(JSON.stringify(obj));
 };
