@@ -1,4 +1,4 @@
-let Field = function (args) { // args: svg, game, index, x, boardY, width, height, isTop, isWhite
+let Field = function (args) { // args: svg, game, index, x, boardY, width, height, isTop, isWhite, boardMarginBottom
     View.call(this, {
         svg: args.svg,
         game: args.game,
@@ -10,10 +10,13 @@ let Field = function (args) { // args: svg, game, index, x, boardY, width, heigh
     this.isTop = args.isTop;
     this.isWhite = args.isWhite;
     this.xCenter = this.x + this.width / 2;
-    this.yStart = this.isTop ? args.boardY : this.totalHeight() + args.boardY;
+    this.yStart = this.isTop ? args.boardY : this.totalHeight() + args.boardY - args.boardMarginBottom;
     this.node = this._buildNode();
     this.slots = this._buildSlots();
     this.targetMarker = undefined;
+    if (DEBUG_MODE) {
+        this.indexDisplay = this._buildIndexDisplay();
+    }
 };
 Field.prototype = Object.create(View.prototype);
 Field.prototype.constructor = Field;
@@ -59,6 +62,36 @@ Field.prototype._buildSlots = function() {
     }
 
     return slots;
+};
+
+if (DEBUG_MODE) {
+    Field.prototype._buildIndexDisplay = function() {
+        let fontSize = 10;
+        let indexDisplay = this.svg.create({
+            name: 'text',
+            attrs: {
+                'x': this.x,
+                'y': this.isTop ? this.yStart : this.yStart + fontSize,
+                'font-family': 'Verdana',
+                'font-size': fontSize,
+                'fill': '#666',
+            },
+        });
+
+        this.svg.setText({
+            node: indexDisplay,
+            to: this.index,
+        });
+
+        return indexDisplay;
+    }
+}
+
+Field.prototype.draw = function() {
+    this.svg.append({ node: this.node, to: this.svg.root });
+    if (DEBUG_MODE) {
+        this.svg.append({ node: this.indexDisplay, to: this.svg.root });
+    }
 };
 
 Field.prototype.pushStone = function(color) {

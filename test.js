@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
         height: 310,
         horizontalSpacing: 20,
         verticalSpacing: 40,
+        marginBottom: DEBUG_MODE ? 10 : 0,
     });
 
     game.start();

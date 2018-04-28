@@ -1,9 +1,9 @@
-let Log = {
-    debugMode: true,
-};
+const DEBUG_MODE = true;
+
+let Log = {};
 
 Log.debugMsg = function (msg) {
-    if (Log.debugMode) {
+    if (DEBUG_MODE) {
         console.log(msg);
     }
 };

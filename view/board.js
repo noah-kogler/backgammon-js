@@ -1,4 +1,4 @@
-let Board = function (args) { // args: game, x, y, width, height, verticalSpacing, horizontalSpacing
+let Board = function (args) { // args: game, x, y, width, height, verticalSpacing, horizontalSpacing, marginBottom
     View.call(this, {
         svg: new SVG({ width: args.width, height: args.height }),
         game: args.game,
@@ -7,6 +7,7 @@ let Board = function (args) { // args: game, x, y, width, height, verticalSpacin
     this.y = args.y;
     this.verticalSpacing = args.verticalSpacing;
     this.horizontalSpacing = args.horizontalSpacing;
+    this.marginBottom = args.marginBottom;
 
     this.fields = this._buildFields();
     this.centerBox = this._buildCenterBox();
@@ -33,7 +34,7 @@ Board.prototype._buildBackgroundBox = function() {
             'x': this.x,
             'y': this.y,
             'width': this.totalWidth(),
-            'height': this.totalHeight(),
+            'height': this.totalHeight() - this.marginBottom,
             'stroke': '#685954',
             'stroke-width': 2,
             'fill': '#BEA192',
@@ -60,7 +61,8 @@ Board.prototype._buildFields = function() {
                 width: fieldWidth,
                 height: fieldHeight,
                 isTop: isTop,
-                isWhite: isWhite
+                isWhite: isWhite,
+                boardMarginBottom: this.marginBottom,
             })
         );
 
@@ -93,7 +95,7 @@ Board.prototype._buildCenterBox = function() {
             'x': this.totalWidth() / 2 - this.horizontalSpacing / 2,
             'y': this.y,
             'width': this.horizontalSpacing,
-            'height': this.totalHeight(),
+            'height': this.totalHeight() - this.marginBottom,
             'fill': 'black',
             'fill-opacity': .75,
         },
@@ -133,7 +135,7 @@ Board.prototype.onStart = function(stones) {
 Board.prototype.drawStatics = function(args) { // args: to
     this.svg.append({ node: this.backgroundBox, to: this.svg.root });
 
-    this.fields.forEach((field) => { this.svg.append({ node: field.node, to: this.svg.root }) });
+    this.fields.forEach(field => { field.draw(); });
     this.svg.append({ node: this.centerBox, to: this.svg.root });
 
     this.svg.append({ node: this.svg.root, to: args.to });
