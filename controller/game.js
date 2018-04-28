@@ -1,9 +1,19 @@
+// CONSTRAINT:
+// Game and data attributes must be updated in event-listeners.
+// Never update game attributes in state change triggers!
+// So it's possible to replay a game to a certain state with goToState.
+
 let Game = function (args) { // args: data
     this.data = args.data;
     this.move = this.data.moves[0];
     this.dicePossibilites = [];
     this.listeners = {}; // { type: [listeners] }
+
+    this.addEventListener('onDiceRolled', this.onDiceRolled.bind(this));
+    this.addEventListener('onTargetSelected', this.onTargetSelected.bind(this));
 };
+
+// Events
 
 // onStart(stones)
 // onRollDice()
@@ -24,25 +34,65 @@ Game.prototype.fireEvent = function(type, ...eventArgs) {
     this.listeners[type].forEach((listener) => { listener(...eventArgs); });
 };
 
+// Event listeners
+
+Game.prototype.onDiceRolled = function(result) {
+    this.move.dice = DataManipulation.deepCopy(result);
+
+    this.dicePossibilites = result[0] === result[1]
+        ? [ result[0], result[1], result[0], result[1] ]
+        : [ result[0], result[1] ];
+};
+
+Game.prototype.onTargetSelected = function(selectedStoneData, selectedTargetSlotData) {
+    let player = this.move.player;
+
+    // check if an opponents stone was hit
+    let opponent = this._opponent();
+    let targetOpponentStones = this.move.stones[selectedTargetSlotData.fieldIndex][opponent];
+    if (targetOpponentStones === 1) {
+        this.move.stones[selectedTargetSlotData.fieldIndex][opponent] -= 1;
+        this.move.out[opponent] += 1;
+    }
+    else {
+        this.move.stones[selectedStoneData.fieldIndex][player] -= 1;
+        this.move.stones[selectedTargetSlotData.fieldIndex][player] += 1;
+    }
+
+    if (this.dicePossibilites.length === 1) { // last possibility left
+        let newMove = DataManipulation.deepCopy(this.move);
+        newMove.player = this._opponent();
+        newMove.dice = [ undefined, undefined ];
+        this.data.moves.push(newMove);
+
+        this.dicePossibilites = [];
+
+        this.move = newMove;
+        Log.debugMsg('started new move: ' + JSON.stringify(this.move));
+    }
+    else {
+        let usedDiceIndex = this.dicePossibilites.findIndex(
+            (possibility) => possibility === this._fieldIndexDifference(
+                player, selectedStoneData.fieldIndex, selectedTargetSlotData.fieldIndex
+            )
+        );
+
+        this.dicePossibilites.splice(usedDiceIndex, 1);
+    }
+};
+
+// State change triggers: Never update data here! Only throw events!
+
 Game.prototype.start = function() {
     this.fireEvent('onStart', this.move.stones);
     this.fireEvent('onRollDice');
 };
 
-Game.prototype.currentPlayerColor = function() {
-    return this.move.player;
-};
-
 Game.prototype.rollDice = function() {
-    this.move.dice = [
+    this.fireEvent('onDiceRolled', [
         this._rollSingleDice(),
         this._rollSingleDice(),
-    ];
-    this.dicePossibilites = this.move.dice[0] === this.move.dice[1]
-        ? [ this.move.dice[0], this.move.dice[1], this.move.dice[0], this.move.dice[1] ]
-        : [ this.move.dice[0], this.move.dice[1] ];
-
-    this.fireEvent('onDiceRolled', this.move.dice);
+    ]);
     this.fireEvent('onSelectStone');
 };
 
@@ -56,39 +106,20 @@ Game.prototype.deselectStone = function(selectedStoneData) {
 };
 
 Game.prototype.selectTarget = function(selectedStoneData, selectedTargetSlotData) {
-    this.fireEvent('onTargetSelected', selectedStoneData, selectedTargetSlotData);
-
     // TODO validation!
-
-    let player = this.move.player;
-
-    this.move.stones[selectedStoneData.fieldIndex][player] -= 1;
-    this.move.stones[selectedTargetSlotData.fieldIndex][player] += 1;
-
-    if (this.dicePossibilites.length === 1) { // last possibility left
-        let newMove = DataManipulation.deepCopy(this.move);
-        newMove.player = this._opponent();
-        newMove.dice = [ undefined, undefined ];
-        this.data.moves.push(newMove);
-
-        this.dicePossibilites = [];
-
-        this.move = newMove;
-        Log.debugMsg('started new move: ' + JSON.stringify(this.move));
-
+    this.fireEvent('onTargetSelected', selectedStoneData, selectedTargetSlotData);
+    if (this.dicePossibilites.length === 0) {
         this.fireEvent('onRollDice');
     }
     else {
-        let usedDiceIndex = this.dicePossibilites.findIndex(
-            (possibility) => possibility === this._fieldIndexDifference(
-                player, selectedStoneData.fieldIndex, selectedTargetSlotData.fieldIndex
-            )
-        );
-
-        this.dicePossibilites.splice(usedDiceIndex, 1);
-
         this.fireEvent('onSelectStone');
     }
+};
+
+// Util methods
+
+Game.prototype.currentPlayerColor = function() {
+    return this.move.player;
 };
 
 Game.prototype.isStoneSelectable = function(stoneData) {
@@ -136,6 +167,12 @@ Game.prototype.isStoneMovable = function(fromFieldIndex, toFieldIndex) {
     );
 
     return result;
+};
+
+Game.prototype.goToState = function (eventDefinitions) {
+    eventDefinitions.forEach(eventDefinition => {
+        this.fireEvent(eventDefinition.event, ...eventDefinition.params);
+    });
 };
 
 Game.prototype._rollSingleDice = function() {

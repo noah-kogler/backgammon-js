@@ -5,12 +5,12 @@ TestData.moves = [
         player: 'white',
         stones: [
             // top left
-            { white: 2, black: 0 },
+            { white: 1, black: 0 },
             { white: 0, black: 0 },
             { white: 0, black: 0 },
             { white: 0, black: 0 },
             { white: 0, black: 0 },
-            { white: 0, black: 5 },
+            { white: 0, black: 1 },
             // top right
             { white: 0, black: 0 },
             { white: 0, black: 3 },

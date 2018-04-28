@@ -97,7 +97,7 @@ Board.prototype._buildCenterBox = function() {
             'width': this.horizontalSpacing,
             'height': this.totalHeight() - this.marginBottom,
             'fill': 'black',
-            'fill-opacity': .75,
+            'fill-opacity': .5,
         },
     });
 };

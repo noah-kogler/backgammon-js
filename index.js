@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
         y: 20,
         width: 500,
         height: 310,
-        horizontalSpacing: 20,
+        horizontalSpacing: 25,
         verticalSpacing: 40,
         marginBottom: DEBUG_MODE ? 10 : 0,
     });
