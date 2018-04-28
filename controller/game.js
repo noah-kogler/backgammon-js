@@ -1,5 +1,6 @@
-let Game = function (args) {
-    this.move = Data.moves[0];
+let Game = function (args) { // args: data
+    this.data = args.data;
+    this.move = this.data.moves[0];
     this.dicePossibilites = [];
     this.listeners = {}; // { type: [listeners] }
 };
@@ -19,7 +20,7 @@ Game.prototype.addEventListener = function(type, listener) {
 };
 
 Game.prototype.fireEvent = function(type, ...eventArgs) {
-    debugMsg('fireEvent: ' + type + ' ' + (eventArgs ? JSON.stringify(eventArgs) : ''));
+    Log.debugMsg('fireEvent: ' + type + ' ' + (eventArgs ? JSON.stringify(eventArgs) : ''));
     this.listeners[type].forEach((listener) => { listener(...eventArgs); });
 };
 
@@ -65,15 +66,15 @@ Game.prototype.selectTarget = function(selectedStoneData, selectedTargetSlotData
     this.move.stones[selectedTargetSlotData.fieldIndex][player] += 1;
 
     if (this.dicePossibilites.length === 1) { // last possibility left
-        let newMove = Data.deepCopy(this.move);
+        let newMove = DataManipulation.deepCopy(this.move);
         newMove.player = this._opponent();
         newMove.dice = [ undefined, undefined ];
-        Data.moves.push(newMove);
+        this.data.moves.push(newMove);
 
         this.dicePossibilites = [];
 
         this.move = newMove;
-        debugMsg('started new move: ' + JSON.stringify(this.move));
+        Log.debugMsg('started new move: ' + JSON.stringify(this.move));
 
         this.fireEvent('onRollDice');
     }
@@ -111,11 +112,11 @@ Game.prototype.isStoneSelectable = function(stoneData) {
 
 Game.prototype.isStoneMovable = function(fromFieldIndex, toFieldIndex) {
     if (!this._validFieldIndex(fromFieldIndex)) {
-        errorMsg("isStoneMovable called with invalid fromFieldIndex: " + fromFieldIndex);
+        Log.errorMsg("isStoneMovable called with invalid fromFieldIndex: " + fromFieldIndex);
         return false;
     }
     if (!this._validFieldIndex(toFieldIndex)) {
-        errorMsg("isStoneMovable called with invalid toFieldIndex: " + toFieldIndex);
+        Log.errorMsg("isStoneMovable called with invalid toFieldIndex: " + toFieldIndex);
         return false;
     }
 

@@ -17,7 +17,7 @@ View.prototype.addGameEventListeners = function(types) {
             this.game.addEventListener(type, this[type].bind(this));
         }
         else {
-            errorMsg(
+            Log.errorMsg(
                 'Missing event handler definition in '
                 + this.constructor.name + ' for ' + type + '.'
             );

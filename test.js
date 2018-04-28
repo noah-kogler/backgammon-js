@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     var game = new Game({
-        data: Data,
+        data: TestData,
     });
 
     var board = new Board({

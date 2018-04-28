@@ -1,6 +1,6 @@
-let Data = {};
+let TestData = {};
 
-Data.moves = [
+TestData.moves = [
     {
         player: 'white',
         stones: [
