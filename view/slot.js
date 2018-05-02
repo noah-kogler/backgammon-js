@@ -1,107 +1,123 @@
-let Slot = function (args) { // args: svg, game, field, index, radius, cx, cy
-    View.call(this, {
-        svg: args.svg,
-        game: args.game,
-    });
-    this.field = args.field;
-    this.index = args.index;
-    this.radius = args.radius;
-    this.cx = args.cx;
-    this.cy = args.cy;
-    this.isTop = this.field.isTop;
-    this.stone = undefined;
-    this.targetMarker = undefined;
-    this.targetMarkerClickListener = undefined;
-    this.data = {
-        fieldIndex: this.field.index,
-        slotIndex: this.index,
+'use strict';
+
+const createSlot = (spec) => {
+    let api;
+
+    const { log, svg, field, index, radius, cx, cy } = spec;
+
+    const isTop = field.isTop();
+
+    let stone = undefined;
+
+    let targetMarker = undefined;
+
+    let targetMarkerClickListener = undefined;
+
+    const data = {
+        fieldIndex: field.index(),
+        slotIndex: index,
     };
 
-    this.addGameEventListeners([
-        'onSelectStone',
-        'onSelectTarget',
-        'onTargetSelected',
-    ]);
-};
-Slot.prototype = Object.create(View.prototype);
-Slot.prototype.constructor = Slot;
+    let toGameMem = undefined; // TODO fix this bad mutable attribute
 
-Slot.prototype.addStone = function(color) {
-    this.stone = new Stone({
-        svg: this.svg,
-        game: this.game,
-        slot: this,
-        field: this.field,
-        color: color,
-    });
-    this.stone.show();
-};
+    const dataEquals = (slotData) =>
+        slotData.fieldIndex === data.fieldIndex
+        && slotData.slotIndex === data.slotIndex;
 
-Slot.prototype.removeStone = function() {
-    if (this.stone) {
-        this.stone.node.parentNode.removeChild(this.stone.node);
-        this.stone = undefined;
-    }
-};
-
-Slot.prototype.onSelectTarget = function(selectedStoneData) {
-    if (
-        this.game.isStoneMovable(selectedStoneData.fieldIndex, this.data.fieldIndex)
-        && this.index === this.field.nextSlot().index
-    ) {
-        this.addTargetMarker();
-        this.targetMarkerClickListener = (event) => {
-            this.game.selectTarget(selectedStoneData, this.data);
-        };
-        this.targetMarker.addEventListener('click', this.targetMarkerClickListener);
-    }
-};
-
-Slot.prototype.onSelectStone = function(selectedStoneData) {
-    if (selectedStoneData && this.targetMarker) {
-        this.removeTargetMarker();
-    }
-};
-
-Slot.prototype.onTargetSelected = function(selectedStoneData, selectedTargetSlotData) {
-    if (this.stone && this.stone._dataEquals(selectedStoneData)) {
-        this.removeStone();
-    }
-    if (this._dataEquals(selectedTargetSlotData)) {
-        this.addStone(selectedStoneData.color);
-    }
-
-    if (this.targetMarker) {
-        this.removeTargetMarker();
-    }
-};
-
-Slot.prototype.addTargetMarker = function() {
-    this.targetMarker = this.svg.create({
-        name: 'circle',
-        attrs: {
-            'cx': this.cx,
-            'cy': this.cy,
-            'r': this.radius,
-            'stroke': 'green',
-            'stroke-width': 2,
-            'stroke-dasharray': '2,2',
-            'fill-opacity': 0,
+    api = {
+        listen: (toGame) => {
+            toGameMem = toGame;
+            toGame.addEventListeners(api, [
+                'onStart',
+                'onSelectStone',
+                'onSelectTarget',
+                'onTargetSelected',
+            ]);
         },
-    });
+        onStart: (game, stones) => {
+            let whiteStoneCount = stones[field.index()]['white'];
+            let blackStoneCount = stones[field.index()]['black'];
 
-    this.svg.append({
-        node: this.targetMarker,
-        to: this.svg.root,
-    });
-};
+            if (index < whiteStoneCount) {
+                api.addStone('white');
+            }
 
-Slot.prototype.removeTargetMarker = function() {
-    this.targetMarker.parentNode.removeChild(this.targetMarker);
-    this.targetMarker = undefined;
-};
+            if (index < blackStoneCount) {
+                api.addStone('black');
+            }
+        },
+        onSelectTarget: (game, selectedStoneData) => {
+            if (
+                game.isStoneMovable(selectedStoneData.fieldIndex, data.fieldIndex)
+                && index === field.nextFreeSlot().index()
+            ) {
+                api.addTargetMarker();
+                targetMarkerClickListener = (event) => {
+                    game.selectTarget(selectedStoneData, data);
+                };
+                targetMarker.addEventListener('click', targetMarkerClickListener);
+            }
+        },
+        addStone: (color) => {
+            stone = createStone({
+                svg,
+                cx,
+                cy,
+                radius,
+                isTop,
+                slotIndex: index,
+                field,
+                color,
+            });
+            stone.show();
+            stone.listen(toGameMem);
+        },
+        removeStone: () => {
+            if (api.hasStone()) {
+                stone.hide();
+                stone = undefined;
+            }
+        },
+        onSelectStone: (game, selectedStoneData) => {
+            if (selectedStoneData && targetMarker) {
+                api.removeTargetMarker();
+            }
+        },
+        onTargetSelected: (game, selectedStoneData, selectedTargetSlotData) => {
+            if (api.hasStone() && stone.dataEquals(selectedStoneData)) {
+                api.removeStone();
+            }
+            if (dataEquals(selectedTargetSlotData)) {
+                api.addStone(selectedStoneData.color);
+            }
 
-Slot.prototype._dataEquals = function(slotData) {
-    return slotData.fieldIndex == this.data.fieldIndex
-        && slotData.slotIndex == this.data.slotIndex;
+            if (targetMarker) {
+                api.removeTargetMarker();
+            }
+        },
+        addTargetMarker: () => {
+            targetMarker = svg.create(
+                'circle',
+                {
+                    'cx': cx,
+                    'cy': cy,
+                    'r': radius,
+                    'stroke': 'green',
+                    'stroke-width': 2,
+                    'stroke-dasharray': '2,2',
+                    'fill-opacity': 0,
+                },
+            );
+            svg.append(targetMarker);
+        },
+        removeTargetMarker: () => {
+            targetMarker.parentNode.removeChild(targetMarker);
+            targetMarker = undefined;
+        },
+        hasStone: () => stone !== undefined,
+        index: () => index,
+        toString: () => 'Slot ' + JSON.stringify(data),
+    };
+
+    return Object.freeze(api);
 };

@@ -1,67 +1,68 @@
-let SVG = function(args) { // args: width, height
-    this.width = args.width;
-    this.height = args.height;
-    this.ns = "http://www.w3.org/2000/svg";
-    this.root = this._build_root();
-};
+'use strict';
 
-SVG.prototype._build_root = function() {
-    let root = document.createElementNS(this.ns, "svg");
-    root.setAttribute('xmlns', this.ns);
-    root.setAttribute('version', '1.1');
-    root.setAttribute('viewBox', this._collapsePoints([[0, 0, this.width, this.height]]));
-    root.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    return root;
-};
+const createSvg = (spec) => {
 
-SVG.prototype.create = function(args) { // args: name, attrs
-    let node = document.createElementNS(this.ns, args.name);
-    Object.keys(args.attrs).forEach((key) => {
-        let rawValue = args.attrs[key];
-        let value;
-        if (Array.isArray(rawValue)) {
-            value = this._collapsePoints(rawValue);
-        }
-        else {
-            value = rawValue;
-        }
+    const { width, height } = spec;
 
-        node.setAttributeNS(null, key, value);
-    });
-    return node;
-};
+    const ns = 'http://www.w3.org/2000/svg';
 
-SVG.prototype.append = function(args) { // args: to, node
-    args.to.appendChild(args.node);
-};
-
-SVG.prototype.setText = function(args) { // args: to, node
-    // clears all content before
-    while (args.node.firstChild) {
-        args.node.removeChild(args.node.firstChild);
-    }
-    args.node.appendChild(
-        document.createTextNode(args.to)
-    );
-};
-
-SVG.prototype.changeAttrs = function(args) { // args: of, to
-    Object.keys(args.to).forEach((key) => {
-        let rawValue = args.to[key];
-        let value;
-        if (Array.isArray(rawValue)) {
-            value = this._collapsePoints(rawValue);
-        }
-        else {
-            value = rawValue;
-        }
-
-        args.of.setAttributeNS(null, key, value);
-    });
-};
-
-SVG.prototype._collapsePoints = function(points) {
-    return points
-        .map((entry) => Array.isArray(entry) ? entry.join(' ') : entry )
+    const collapsePoints = points => points
+        .map(entry => Array.isArray(entry) ? entry.join(' ') : entry)
         .join(', ');
+
+    const root = document.createElementNS(ns, 'svg');
+    root.setAttribute('xmlns', ns);
+    root.setAttribute('version', '1.1');
+    root.setAttribute('viewBox', collapsePoints([[0, 0, width, height]]));
+    root.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+    const api = {
+
+        draw: (toNode) => {
+            api.append(root, toNode);
+        },
+
+        create: (name, attrs) => {
+            let node = document.createElementNS(ns, name);
+            Object.keys(attrs).forEach((key) => {
+                let rawValue = attrs[key];
+                let value = Array.isArray(rawValue) ? collapsePoints(rawValue) : rawValue;
+                node.setAttributeNS(null, key, value);
+            });
+            return node;
+        },
+
+        append: (node, toNode) => {
+            toNode = toNode || root;
+            toNode.appendChild(node);
+        },
+
+        setText: (ofNode, toText) => {
+            // clears all content before
+            while (ofNode.firstChild) {
+                ofNode.removeChild(ofNode.firstChild);
+            }
+            ofNode.appendChild(
+                document.createTextNode(toText)
+            );
+        },
+
+        changeAttrs: (ofNode, toAttrs) => {
+            Object.keys(toAttrs).forEach((key) => {
+                let rawValue = toAttrs[key];
+                let value;
+                if (Array.isArray(rawValue)) {
+                    value = collapsePoints(rawValue);
+                }
+                else {
+                    value = rawValue;
+                }
+
+                ofNode.setAttributeNS(null, key, value);
+            });
+        },
+
+    };
+
+    return Object.freeze(api);
 };

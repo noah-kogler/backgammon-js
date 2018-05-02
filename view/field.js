@@ -1,105 +1,102 @@
-let Field = function (args) { // args: svg, game, index, x, boardY, width, height, isTop, isWhite, boardMarginBottom
-    View.call(this, {
-        svg: args.svg,
-        game: args.game,
-    });
-    this.index = args.index;
-    this.x = args.x; // top left corner if isTop, else bottom left corner
-    this.width = args.width;
-    this.height = args.height;
-    this.isTop = args.isTop;
-    this.isWhite = args.isWhite;
-    this.xCenter = this.x + this.width / 2;
-    this.yStart = this.isTop ? args.boardY : this.totalHeight() + args.boardY - args.boardMarginBottom;
-    this.node = this._buildNode();
-    this.slots = this._buildSlots();
-    this.targetMarker = undefined;
-    if (DEBUG_MODE) {
-        this.indexDisplay = this._buildIndexDisplay();
-    }
-};
-Field.prototype = Object.create(View.prototype);
-Field.prototype.constructor = Field;
+'use strict';
 
-Field.prototype._buildNode = function() {
-    let xEnd = this.x + this.width;
-    let yEnd = this.isTop
-        ? this.yStart + this.height
-        : this.yStart - this.height;
+const createField = (spec) => {
+    let api;
 
-    return this.svg.create({
-        name: 'polygon',
-        attrs: {
-            'points': [[this.x, this.yStart], [this.xCenter, yEnd], [xEnd, this.yStart]],
-            'stroke': '#685954',
-            'stroke-width': .2,
-            'fill': this.isWhite ? 'white' : 'black',
-            'fill-opacity': .5,
-        },
-    });
-};
+    const { log, svg, index, x, width, height, isTop, isWhite, boardY, boardHeight, boardMarginBottom } = spec;
 
-Field.prototype._buildSlots = function() {
-    let slots = [];
+    const xCenter = x + width / 2;
 
-    let fieldDiff = 6;
-    let radius = this.width / 2 - fieldDiff;
-    let cx = this.x + this.width / 2;
-    let cy = this.isTop ? this.yStart + radius : this.yStart - radius;
-    for (let i = 0; i < 5; i++) {
-        slots.push(
-            new Slot({
-                svg: this.svg,
-                game: this.game,
-                field: this,
-                index: i,
-                radius: radius,
-                cx: cx,
-                cy: cy,
-            })
-        );
-        cy = this.isTop ? cy + radius * 2 : cy - radius * 2;
-    }
+    const yStart = isTop ? boardY : boardHeight + boardY - boardMarginBottom;
 
-    return slots;
-};
+    const node = (() => {
+        let xEnd = x + width;
+        let yEnd = isTop ? yStart + height : yStart - height;
 
-if (DEBUG_MODE) {
-    Field.prototype._buildIndexDisplay = function() {
-        let fontSize = 10;
-        let indexDisplay = this.svg.create({
-            name: 'text',
-            attrs: {
-                'x': this.x,
-                'y': this.isTop ? this.yStart : this.yStart + fontSize,
-                'font-family': 'Verdana',
-                'font-size': fontSize,
-                'fill': '#666',
+        return svg.create(
+            'polygon',
+            {
+                'points': [[x, yStart], [xCenter, yEnd], [xEnd, yStart]],
+                'stroke': '#685954',
+                'stroke-width': .2,
+                'fill': isWhite ? 'white' : 'black',
+                'fill-opacity': .5,
             },
-        });
+        );
+    })();
 
-        this.svg.setText({
-            node: indexDisplay,
-            to: this.index,
-        });
+    let loadedSlots;
+    const slots = () => {
+        if (loadedSlots) {
+            return loadedSlots;
+        }
+        let slots = [];
 
-        return indexDisplay;
-    }
-}
+        let fieldDiff = 6;
+        let radius = width / 2 - fieldDiff;
+        let cx = x + width / 2;
+        let cy = isTop ? yStart + radius : yStart - radius;
+        for (let i = 0; i < 5; i++) {
+            slots.push(
+                createSlot({
+                    svg: svg,
+                    field: api,
+                    index: i,
+                    radius: radius,
+                    cx: cx,
+                    cy: cy,
+                })
+            );
+            cy = isTop ? cy + radius * 2 : cy - radius * 2;
+        }
 
-Field.prototype.draw = function() {
-    this.svg.append({ node: this.node, to: this.svg.root });
-    if (DEBUG_MODE) {
-        this.svg.append({ node: this.indexDisplay, to: this.svg.root });
-    }
-};
+        loadedSlots = slots;
+        return slots;
+    };
 
-Field.prototype.pushStone = function(color) {
-    let slot = this.nextSlot();
-    slot.addStone(color);
-};
+    const targetMarker = undefined;
 
-Field.prototype.nextSlot = function() {
-    let nextIdx = this.slots.findIndex((slot) => !slot.stone);
-    return this.slots[nextIdx];
+    const indexDisplay = log.levelIs(LogLevel.DEBUG)
+        ? (() => {
+            let fontSize = 10;
+            let indexDisplay = svg.create(
+                'text',
+                {
+                    'x': x,
+                    'y': isTop ? yStart : yStart + fontSize,
+                    'font-family': 'Verdana',
+                    'font-size': fontSize,
+                    'fill': '#666',
+                },
+            );
+
+            svg.setText(indexDisplay, index);
+
+            return indexDisplay;
+        })()
+        : undefined;
+
+    api = Object.freeze({
+        listen: (toGame) => {
+            toGame.addEventListeners(api, [
+                'onStart',
+            ]);
+            slots().forEach((slot) => { slot.listen(toGame); });
+        },
+        onStart: (game, stones) => {
+            svg.append(node);
+            if (log.levelIs(LogLevel.DEBUG)) {
+                svg.append( indexDisplay);
+            }
+        },
+        nextFreeSlot: () => {
+            let nextIdx = slots().findIndex((slot) => !slot.hasStone());
+            return slots()[nextIdx];
+        },
+        isTop: () => isTop,
+        index: () => index,
+        toString: () => 'Field ' + JSON.stringify({ index }),
+    });
+
+    return api;
 };

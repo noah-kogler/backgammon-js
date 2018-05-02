@@ -1,26 +1,21 @@
-let View = function (args) { // args: game, svg
-    this.game = args.game;
-    this.svg  = args.svg;
-}
+'use strict';
 
-View.prototype.totalWidth = function() {
-    return this.svg.width;
-};
+const createView = (spec) => {
 
-View.prototype.totalHeight = function() {
-    return this.svg.height;
-};
+    const { log, x, y, width, height } = spec;
 
-View.prototype.addGameEventListeners = function(types) {
-    types.forEach((type) => {
-        if (this[type]) {
-            this.game.addEventListener(type, this[type].bind(this));
-        }
-        else {
-            Log.errorMsg(
-                'Missing event handler definition in '
-                + this.constructor.name + ' for ' + type + '.'
-            );
-        }
+    const svg = createSvg({ width, height });
+
+    const board = createBoard({ log, svg, x, y, width, height });
+
+    const api = Object.freeze({
+        draw: (toNode) => {
+            svg.draw(toNode);
+        },
+        listen: (toGame) => {
+            board.listen(toGame);
+        },
     });
+
+    return api;
 };

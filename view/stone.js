@@ -1,122 +1,120 @@
-let Stone = function (args) { // args: svg, game, slot, field, color
-    View.call(this, {
-        svg: args.svg,
-        game: args.game,
-    });
-    this.slot = args.slot;
-    this.field = args.field;
-    this.color = args.color;
-    this.liftHeight = 10;
-    this.stroke = 'grey';
-    this.strokeWidth = .4;
-    this.node = this._buildNode();
-    this.onClick = undefined;
-    this.data = {
-        color: this.color,
-        fieldIndex: this.field.index,
-        slotIndex: this.slot.index,
+'use strict';
+
+const createStone = (spec) => {
+    let api;
+
+    const { log, svg, field, color, cx, cy, isTop, slotIndex, radius } = spec;
+
+    const liftHeight = 10;
+
+    const stroke = 'grey';
+
+    const strokeWidth = .4;
+
+    const node = svg.create(
+        'circle',
+        {
+            'cx': cx,
+            'cy': cy,
+            'r': radius,
+            'fill': color,
+            'stroke': stroke,
+            'stroke-width': strokeWidth,
+        }
+    );
+
+    let onClick = undefined;
+
+    const data = {
+        color: color,
+        fieldIndex: field.index(),
+        slotIndex: slotIndex,
     };
 
-    this.addGameEventListeners([
-        'onSelectStone',
-        'onStoneSelected',
-    ]);
-};
-Stone.prototype = Object.create(View.prototype);
-Stone.prototype.constructor = Stone;
+    let selected = false;
 
-Stone.prototype._buildNode = function() {
-    return this.svg.create({
-        name: 'circle',
-        attrs: {
-            'cx': this.slot.cx,
-            'cy': this.slot.cy,
-            'r': this.slot.radius,
-            'fill': this.color,
-            'stroke': this.stroke,
-            'stroke-width': this.strokeWidth,
+    const select = () => {
+        svg.changeAttrs(
+            node,
+            { cy: isTop ? cy + liftHeight : cy - liftHeight },
+        );
+
+        selected = true;
+    };
+
+    const deselect = () => {
+        svg.changeAttrs(node, { cy });
+        selected = false;
+    };
+
+    const replaceOnClickEventListener = (withEventListener) => {
+        if (onClick) {
+            node.removeEventListener('click', onClick);
+        }
+        onClick = withEventListener;
+        node.addEventListener('click', withEventListener);
+    };
+
+    api = {
+        listen: (toGame) => {
+            toGame.addEventListeners(api, [
+                'onStart',
+                'onSelectStone',
+                'onStoneSelected',
+            ]);
         },
-    });
-};
-
-Stone.prototype.show = function() {
-    this.svg.append({
-        node: this.node,
-        to: this.svg.root,
-    });
-};
-
-Stone.prototype.onSelectStone = function(selectedStoneData) {
-    if (selectedStoneData && this._dataEquals(selectedStoneData)) {
-        this._deselect();
-    }
-    if (this.color == this.game.currentPlayerColor()) {
-        let isSelectable = this.game.isStoneSelectable(this.data);
-
-        this.svg.changeAttrs({
-            of: this.node,
-            to: {
-                stroke: isSelectable ? 'green' : 'red',
-                'stroke-width': 2
+        onStart: () => {
+            api.show();
+        },
+        onSelectStone: (game, selectedStoneData) => {
+            if (selectedStoneData && dataEquals(selectedStoneData)) {
+                deselect();
             }
-        });
+            if (color == game.currentPlayerColor()) {
+                let isSelectable = game.isStoneSelectable(data);
 
-        if (isSelectable) {
-            this._replaceOnClickEventListener((event) => { this.game.selectStone(this.data); });
-        }
-    }
-};
+                svg.changeAttrs(
+                    node,
+                    {
+                        stroke: isSelectable ? 'green' : 'red',
+                        'stroke-width': 2
+                    }
+                );
 
-Stone.prototype.onStoneSelected = function(stoneData) {
-    if (this._dataEquals(stoneData)) {
-        this._select();
-        this._replaceOnClickEventListener((event) => { this.game.deselectStone(this.data); });
-    }
-    else {
-        this.node.removeEventListener('click', this.onClick);
-    }
-
-    this.svg.changeAttrs({
-        of: this.node,
-        to: {
-            stroke: this.stroke,
-            'stroke-width': this.strokeWidth,
-        }
-    });
-};
-
-Stone.prototype._select = function() {
-    this.svg.changeAttrs({
-        of: this.node,
-        to: {
-            cy: this.slot.isTop
-                ? this.slot.cy + this.liftHeight
-                : this.slot.cy - this.liftHeight
+                if (isSelectable) {
+                    replaceOnClickEventListener((event) => { game.selectStone(data); });
+                }
+            }
         },
-    });
+        onStoneSelected: (game, stoneData) => {
+            if (api.dataEquals(stoneData)) {
+                select();
+                replaceOnClickEventListener((event) => { game.deselectStone(data); });
+            }
+            else {
+                node.removeEventListener('click', onClick);
+            }
 
-    this.selected = true;
-};
+            svg.changeAttrs(
+                node,
+                {
+                    'stroke': stroke,
+                    'stroke-width': strokeWidth,
+                }
+            );
+        },
+        show: () => {
+            svg.append(node);
+        },
+        hide: () => {
+            node.parentNode.removeChild(node);
+        },
+        dataEquals: (stoneData) =>
+            stoneData.color == data.color
+            && stoneData.fieldIndex == data.fieldIndex
+            && stoneData.slotIndex == data.slotIndex,
+        toString: () => 'Stone ' + JSON.stringify(data),
+    };
 
-Stone.prototype._deselect = function() {
-    this.svg.changeAttrs({
-        of: this.node,
-        to: { cy: this.slot.cy },
-    });
-
-    this.selected = false;
-};
-
-Stone.prototype._dataEquals = function(stoneData) {
-    return stoneData.color == this.data.color
-        && stoneData.fieldIndex == this.data.fieldIndex
-        && stoneData.slotIndex == this.data.slotIndex;
-};
-
-Stone.prototype._replaceOnClickEventListener = function(withEventListener) {
-    if (this.onClick) {
-        this.node.removeEventListener('click', this.onClick);
-    }
-    this.onClick = withEventListener;
-    this.node.addEventListener('click', withEventListener);
+    return Object.freeze(api);
 };
