@@ -3,7 +3,7 @@
 const createStone = (spec) => {
     let api;
 
-    const { log, svg, cx, cy, radius, color, isTop, fieldIndex, slotIndex } = spec;
+    const { log, svg, cx, cy, radius, player, isTop, fieldIndex, slotIndex } = spec;
 
     const liftHeight = 10;
 
@@ -17,7 +17,7 @@ const createStone = (spec) => {
             'cx': cx,
             'cy': cy,
             'r': radius,
-            'fill': color,
+            'fill': player.color,
             'stroke': stroke,
             'stroke-width': strokeWidth,
         }
@@ -26,7 +26,7 @@ const createStone = (spec) => {
     let onClick = undefined;
 
     const data = createStoneData({
-        color: color,
+        player: player,
         fieldIndex: fieldIndex,
         slotIndex: slotIndex,
     });
@@ -70,7 +70,7 @@ const createStone = (spec) => {
             if (selectedStoneData && api.dataEquals(selectedStoneData)) {
                 deselect();
             }
-            if (color == game.currentPlayerColor()) {
+            if (player.equals(game.currentPlayer())) {
                 let isSelectable = game.isStoneSelectable(data);
 
                 svg.changeAttrs(

@@ -127,7 +127,7 @@ const createBoard = (spec) => {
             svg.append(currentActionStats);
         },
         onRollDice: (game) => {
-            setCurrentActionStats(game.currentPlayerColor(), 'Roll the dice!');
+            setCurrentActionStats(game.currentPlayer().name(), 'Roll the dice!');
 
             svg.setText(diceStats, 'roll');
 
@@ -140,10 +140,10 @@ const createBoard = (spec) => {
             svg.setText(diceStats, result[0] + ' ' + result[1]);
         },
         onSelectStone: (game, selectedStoneData) => {
-            setCurrentActionStats(game.currentPlayerColor(), 'Select a Stone!');
+            setCurrentActionStats(game.currentPlayer().name(), 'Select a Stone!');
         },
         onSelectTarget: function(game, selectedStoneData) {
-            setCurrentActionStats(selectedStoneData.color, 'Select a Target!');
+            setCurrentActionStats(selectedStoneData.player.name(), 'Select a Target!');
         },
         toString: () => 'Board',
     });

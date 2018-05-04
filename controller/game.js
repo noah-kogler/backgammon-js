@@ -31,9 +31,9 @@ const createGame = (spec) => {
         listeners[type].forEach((listener) => { listener(api, ...eventArgs); });
     };
 
-    const getOpponent = () => move.player === 'white' ? 'black' : 'white';
+    const getOpponent = () => move.player.equals(Player.WHITE) ? Player.BLACK : Player.WHITE;
 
-    const fieldIndexDifference = (player, fromFieldIndex, toFieldIndex) => player === 'white'
+    const fieldIndexDifference = (player, fromFieldIndex, toFieldIndex) => player.equals(Player.WHITE)
         ? toFieldIndex - fromFieldIndex
         : fromFieldIndex - toFieldIndex;
 
@@ -44,7 +44,7 @@ const createGame = (spec) => {
     };
 
     const getPossibleTargetFieldIndex = (player, fieldIndex, difference) =>
-        player === 'white'
+        player.equals(Player.WHITE)
             ? fieldIndex + difference
             : fieldIndex - difference;
 
@@ -86,14 +86,14 @@ const createGame = (spec) => {
 
             // check if an opponents stone was hit
             let opponent = getOpponent();
-            let targetOpponentStones = move.stones[selectedTargetSlotData.fieldIndex][opponent];
+            let targetOpponentStones = move.stones[selectedTargetSlotData.fieldIndex][opponent.id];
             if (targetOpponentStones === 1) {
-                move.stones[selectedTargetSlotData.fieldIndex][opponent] -= 1;
-                move.out[opponent] += 1;
+                move.stones[selectedTargetSlotData.fieldIndex][opponent.id] -= 1;
+                move.out[opponent.id] += 1;
             }
             else {
-                move.stones[selectedStoneData.fieldIndex][player] -= 1;
-                move.stones[selectedTargetSlotData.fieldIndex][player] += 1;
+                move.stones[selectedStoneData.fieldIndex][player.id] -= 1;
+                move.stones[selectedTargetSlotData.fieldIndex][player.id] += 1;
             }
 
             if (dicePossibilites.length === 1) { // last possibility left
@@ -155,15 +155,15 @@ const createGame = (spec) => {
 
         // Util methods
 
-        currentPlayerColor: () => move.player,
+        currentPlayer: () => move.player,
 
         isStoneSelectable: (stoneData) =>
-            stoneData.color === api.currentPlayerColor()
-                && stoneData.slotIndex == (move.stones[stoneData.fieldIndex][stoneData.color] - 1)
+            stoneData.player.equals(api.currentPlayer())
+                && stoneData.slotIndex === (move.stones[stoneData.fieldIndex][stoneData.player.id] - 1)
                 && dicePossibilites.findIndex(
                     possibility => {
                         let possibleTargetFieldIndex = getPossibleTargetFieldIndex(
-                            stoneData.color, stoneData.fieldIndex, possibility
+                            stoneData.player, stoneData.fieldIndex, possibility
                         );
                         return (
                             validFieldIndex(possibleTargetFieldIndex)
@@ -195,8 +195,8 @@ const createGame = (spec) => {
             let currentStones = move.stones[toFieldIndex];
 
             return (
-                currentStones[player] < 5
-                && currentStones[opponent] <= 1
+                currentStones[player.id] < 5
+                && currentStones[opponent.id] <= 1
                 && dicePossibilites.findIndex(possibility => possibility === fieldDifference) >= 0
             );
         },

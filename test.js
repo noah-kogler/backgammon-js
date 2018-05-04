@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const data = createGameData();
 
-    data.moves[0].stones[0].white = 1;
-    data.moves[0].stones[5].black = 1;
+    data.moves[0].stones[0][Player.WHITE.id] = 1;
+    data.moves[0].stones[5][Player.BLACK.id] = 1;
 
     const game = createGame({ log, data });
 
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
     view.listen(game);
 
     let selectedStoneData = {
-        color: 'white',
+        player: Player.WHITE,
         fieldIndex: 0,
         slotIndex: 0,
     };

@@ -1,9 +1,9 @@
 'use strict';
 
-const LogLevel = {
+const LogLevel = Object.freeze({
     DEBUG: 1,
     ERROR: 0,
-};
+});
 
 const createLog = (spec) => {
     const { level } = spec;

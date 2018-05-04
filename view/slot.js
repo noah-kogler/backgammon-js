@@ -18,14 +18,14 @@ const createSlot = (spec) => {
         slotIndex: index,
     });
 
-    const addStone = (game, color) => {
+    const addStone = (game, player) => {
         stone = createStone({
             log,
             svg,
             cx,
             cy,
             radius,
-            color,
+            player,
             isTop,
             fieldIndex: data.fieldIndex,
             slotIndex: index,
@@ -44,15 +44,15 @@ const createSlot = (spec) => {
             ]);
         },
         onStart: (game, stones) => {
-            let whiteStoneCount = stones[field.index()]['white'];
-            let blackStoneCount = stones[field.index()]['black'];
+            let whiteStoneCount = stones[field.index()][Player.WHITE.id];
+            let blackStoneCount = stones[field.index()][Player.BLACK.id];
 
             if (index < whiteStoneCount) {
-                addStone(game, 'white');
+                addStone(game, Player.WHITE);
             }
 
             if (index < blackStoneCount) {
-                addStone(game, 'black');
+                addStone(game, Player.BLACK);
             }
         },
         onSelectTarget: (game, selectedStoneData) => {
@@ -83,7 +83,7 @@ const createSlot = (spec) => {
                 api.removeStone();
             }
             if (data.equals(selectedTargetSlotData)) {
-                addStone(game, selectedStoneData.color);
+                addStone(game, selectedStoneData.player);
             }
 
             if (targetMarker) {
