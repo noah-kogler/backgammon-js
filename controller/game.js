@@ -20,8 +20,6 @@ const createGame = (spec) => {
 
     const { log, data } = spec;
 
-    let move = data.moves[0];
-
     let dicePossibilites = [];
 
     const listeners = {}; // { type: [listeners] }
@@ -30,8 +28,6 @@ const createGame = (spec) => {
         log.debug('fireEvent: ' + type + ' ' + (eventArgs ? JSON.stringify(eventArgs) : ''));
         listeners[type].forEach((listener) => { listener(api, ...eventArgs); });
     };
-
-    const getOpponent = () => move.player.equals(Player.WHITE) ? Player.BLACK : Player.WHITE;
 
     const fieldIndexDifference = (player, fromFieldIndex, toFieldIndex) => player.equals(Player.WHITE)
         ? toFieldIndex - fromFieldIndex
@@ -49,9 +45,6 @@ const createGame = (spec) => {
             : fieldIndex - difference;
 
     const validFieldIndex = (fieldIndex) => fieldIndex >= 0 && fieldIndex < 24;
-
-    // This doesn't preserve type-information and non-derializable attributes.
-    const deepCopyObj = (obj) => JSON.parse(JSON.stringify(obj));
 
     api = {
         addEventListeners: (toObj, types) => {
@@ -74,7 +67,7 @@ const createGame = (spec) => {
         // Event listeners
 
         onDiceRolled: (game, result) => {
-            move.dice = deepCopyObj(result);
+            data.dice(result);
 
             dicePossibilites = result[0] === result[1]
                 ? [ result[0], result[1], result[0], result[1] ]
@@ -82,30 +75,23 @@ const createGame = (spec) => {
         },
 
         onTargetSelected: (game, selectedStoneData, selectedTargetSlotData) => {
-            let player = move.player;
+            let player = data.player();
+            let opponent = data.opponent();
 
             // check if an opponents stone was hit
-            let opponent = getOpponent();
-            let targetOpponentStones = move.stones[selectedTargetSlotData.fieldIndex][opponent.id];
+            let targetOpponentStones = data.stoneCount(selectedTargetSlotData.fieldIndex, opponent);
             if (targetOpponentStones === 1) {
-                move.stones[selectedTargetSlotData.fieldIndex][opponent.id] -= 1;
-                move.out[opponent.id] += 1;
+                data.decrementStoneCount(selectedTargetSlotData.fieldIndex, opponent);
+                data.incrementOutCount(opponent);
             }
             else {
-                move.stones[selectedStoneData.fieldIndex][player.id] -= 1;
-                move.stones[selectedTargetSlotData.fieldIndex][player.id] += 1;
+                data.decrementStoneCount(selectedStoneData.fieldIndex, player);
+                data.incrementStoneCount(selectedTargetSlotData.fieldIndex, player);
             }
 
             if (dicePossibilites.length === 1) { // last possibility left
-                let newMove = deepCopyObj(move);
-                newMove.player = opponent;
-                newMove.dice = [ undefined, undefined ];
-                data.moves.push(newMove);
-
                 dicePossibilites = [];
-
-                move = newMove;
-                log.debug('started new move: ' + JSON.stringify(move));
+                data.nextMove();
             }
             else {
                 let usedDiceIndex = dicePossibilites.findIndex(
@@ -121,7 +107,7 @@ const createGame = (spec) => {
         // State change triggers: Never update data here! Only throw events!
 
         start: () => {
-            fireEvent('onStart', move.stones);
+            fireEvent('onStart', data.stones());
             fireEvent('onRollDice');
         },
 
@@ -155,11 +141,9 @@ const createGame = (spec) => {
 
         // Util methods
 
-        currentPlayer: () => move.player,
-
         isStoneSelectable: (stoneData) =>
-            stoneData.player.equals(api.currentPlayer())
-                && stoneData.slotIndex === (move.stones[stoneData.fieldIndex][stoneData.player.id] - 1)
+            stoneData.player.equals(data.player())
+                && stoneData.slotIndex === (data.stoneCount(stoneData.fieldIndex, stoneData.player) - 1)
                 && dicePossibilites.findIndex(
                     possibility => {
                         let possibleTargetFieldIndex = getPossibleTargetFieldIndex(
@@ -189,14 +173,14 @@ const createGame = (spec) => {
                 return false;
             }
 
-            let player = move.player;
-            let opponent = getOpponent();
+            let player = data.player();
             let fieldDifference = fieldIndexDifference(player, fromFieldIndex, toFieldIndex);
-            let currentStones = move.stones[toFieldIndex];
+            let playerStoneCount = data.stoneCount(toFieldIndex, player);
+            let opponentStoneCount = data.stoneCount(toFieldIndex, data.opponent());
 
             return (
-                currentStones[player.id] < 5
-                && currentStones[opponent.id] <= 1
+                playerStoneCount < 5
+                && opponentStoneCount <= 1
                 && dicePossibilites.findIndex(possibility => possibility === fieldDifference) >= 0
             );
         },
@@ -206,6 +190,8 @@ const createGame = (spec) => {
                 fireEvent(eventDefinition.event, ...eventDefinition.params);
             });
         },
+
+        currentPlayer: () => data.player(),
 
         toString: () => 'Game',
     };

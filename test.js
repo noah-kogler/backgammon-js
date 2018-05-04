@@ -3,10 +3,13 @@
 document.addEventListener('DOMContentLoaded', function () {
     const log = createLog({ level: LogLevel.DEBUG });
 
-    const data = createGameData();
+    const data = createGameData({ log });
 
-    data.moves[0].stones[0][Player.WHITE.id] = 1;
-    data.moves[0].stones[5][Player.BLACK.id] = 1;
+    // create a test situation
+    data.decrementStoneCount(0, Player.WHITE);
+    for (var i = 0; i < 4; i++) {
+        data.decrementStoneCount(5, Player.BLACK);
+    }
 
     const game = createGame({ log, data });
 
@@ -28,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
         slotIndex: 0,
     };
     game.goToState([
-        { event: 'onStart', params: [data.moves[0].stones] },
+        { event: 'onStart', params: [data.stones()] },
         { event: 'onRollDice', params: [] },
         { event: 'onDiceRolled', params: [[5, 1]] },
         { event: 'onSelectStone', params: [] },
