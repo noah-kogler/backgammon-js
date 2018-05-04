@@ -3,20 +3,18 @@
 const createField = (spec) => {
     let api;
 
-    const { log, svg, index, x, width, height, isTop, isWhite, boardY, boardHeight, boardMarginBottom } = spec;
+    const { log, svg, index, x, y, width, height, isTop, isWhite } = spec;
 
     const xCenter = x + width / 2;
 
-    const yStart = isTop ? boardY : boardHeight + boardY - boardMarginBottom;
-
     const node = (() => {
         let xEnd = x + width;
-        let yEnd = isTop ? yStart + height : yStart - height;
+        let yEnd = isTop ? y + height : y - height;
 
         return svg.create(
             'polygon',
             {
-                'points': [[x, yStart], [xCenter, yEnd], [xEnd, yStart]],
+                'points': [[x, y], [xCenter, yEnd], [xEnd, y]],
                 'stroke': '#685954',
                 'stroke-width': .2,
                 'fill': isWhite ? 'white' : 'black',
@@ -35,16 +33,17 @@ const createField = (spec) => {
         let fieldDiff = 6;
         let radius = width / 2 - fieldDiff;
         let cx = x + width / 2;
-        let cy = isTop ? yStart + radius : yStart - radius;
+        let cy = isTop ? y + radius : y - radius;
         for (let i = 0; i < 5; i++) {
             slots.push(
                 createSlot({
-                    svg: svg,
+                    log,
+                    svg,
                     field: api,
+                    cx,
+                    cy,
+                    radius,
                     index: i,
-                    radius: radius,
-                    cx: cx,
-                    cy: cy,
                 })
             );
             cy = isTop ? cy + radius * 2 : cy - radius * 2;
@@ -63,7 +62,7 @@ const createField = (spec) => {
                 'text',
                 {
                     'x': x,
-                    'y': isTop ? yStart : yStart + fontSize,
+                    'y': isTop ? y : y + fontSize,
                     'font-family': 'Verdana',
                     'font-size': fontSize,
                     'fill': '#666',

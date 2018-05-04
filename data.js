@@ -1,7 +1,7 @@
 'use strict';
 
-const createData = () => {
-    return {
+const createGameData = () => {
+    return Object.freeze({
         moves: [{
             player: 'white',
             stones: [
@@ -47,5 +47,37 @@ const createData = () => {
                 undefined,
             ],
         }],
+    });
+};
+
+const createSlotData = (spec) => {
+
+    const { fieldIndex, slotIndex } = spec;
+
+    const api = {
+        fieldIndex,
+        slotIndex,
+        equals: (slotData) =>
+            slotData.fieldIndex === api.fieldIndex
+            && slotData.slotIndex === api.slotIndex,
     };
+
+    return Object.freeze(api);
+};
+
+const createStoneData = (spec) => {
+
+    const { fieldIndex, slotIndex, color } = spec;
+
+    const api = {
+        fieldIndex,
+        slotIndex,
+        color,
+        equals: (stoneData) =>
+            stoneData.color === api.color
+            && stoneData.fieldIndex === api.fieldIndex
+            && stoneData.slotIndex === api.slotIndex,
+    };
+
+    return Object.freeze(api);
 };

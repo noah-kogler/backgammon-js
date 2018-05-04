@@ -23,15 +23,13 @@ const createBoard = (spec) => {
                 createField({
                     log: log,
                     svg: svg,
-                    index: i,
                     x: fieldX,
-                    boardY: y,
+                    y: isTop ? y : height + y - marginBottom,
                     width: fieldWidth,
                     height: fieldHeight,
+                    index: i,
                     isTop: isTop,
                     isWhite: isWhite,
-                    boardMarginBottom: marginBottom,
-                    boardHeight: height,
                 })
             );
 

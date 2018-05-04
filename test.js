@@ -3,7 +3,10 @@
 document.addEventListener('DOMContentLoaded', function () {
     const log = createLog({ level: LogLevel.DEBUG });
 
-    const data = createTestData();
+    const data = createGameData();
+
+    data.moves[0].stones[0].white = 1;
+    data.moves[0].stones[5].black = 1;
 
     const game = createGame({ log, data });
 

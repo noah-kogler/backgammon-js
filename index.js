@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const log = createLog({ level: LogLevel.DEBUG });
 
-    const game = createGame({ log, data: createData() });
+    const game = createGame({ log, data: createGameData() });
 
     const view = createView({
         log,

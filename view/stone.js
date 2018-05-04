@@ -3,7 +3,7 @@
 const createStone = (spec) => {
     let api;
 
-    const { log, svg, field, color, cx, cy, isTop, slotIndex, radius } = spec;
+    const { log, svg, cx, cy, radius, color, isTop, fieldIndex, slotIndex } = spec;
 
     const liftHeight = 10;
 
@@ -25,11 +25,11 @@ const createStone = (spec) => {
 
     let onClick = undefined;
 
-    const data = {
+    const data = createStoneData({
         color: color,
-        fieldIndex: field.index(),
+        fieldIndex: fieldIndex,
         slotIndex: slotIndex,
-    };
+    });
 
     let selected = false;
 
@@ -67,7 +67,7 @@ const createStone = (spec) => {
             api.show();
         },
         onSelectStone: (game, selectedStoneData) => {
-            if (selectedStoneData && dataEquals(selectedStoneData)) {
+            if (selectedStoneData && api.dataEquals(selectedStoneData)) {
                 deselect();
             }
             if (color == game.currentPlayerColor()) {
@@ -109,10 +109,7 @@ const createStone = (spec) => {
         hide: () => {
             node.parentNode.removeChild(node);
         },
-        dataEquals: (stoneData) =>
-            stoneData.color == data.color
-            && stoneData.fieldIndex == data.fieldIndex
-            && stoneData.slotIndex == data.slotIndex,
+        dataEquals: data.equals,
         toString: () => 'Stone ' + JSON.stringify(data),
     };
 

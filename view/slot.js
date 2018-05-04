@@ -3,7 +3,7 @@
 const createSlot = (spec) => {
     let api;
 
-    const { log, svg, field, index, radius, cx, cy } = spec;
+    const { log, svg, field, cx, cy, radius, index } = spec;
 
     const isTop = field.isTop();
 
@@ -13,20 +13,29 @@ const createSlot = (spec) => {
 
     let targetMarkerClickListener = undefined;
 
-    const data = {
+    const data = createSlotData({
         fieldIndex: field.index(),
         slotIndex: index,
+    });
+
+    const addStone = (game, color) => {
+        stone = createStone({
+            log,
+            svg,
+            cx,
+            cy,
+            radius,
+            color,
+            isTop,
+            fieldIndex: data.fieldIndex,
+            slotIndex: index,
+        });
+        stone.show();
+        stone.listen(game);
     };
-
-    let toGameMem = undefined; // TODO fix this bad mutable attribute
-
-    const dataEquals = (slotData) =>
-        slotData.fieldIndex === data.fieldIndex
-        && slotData.slotIndex === data.slotIndex;
 
     api = {
         listen: (toGame) => {
-            toGameMem = toGame;
             toGame.addEventListeners(api, [
                 'onStart',
                 'onSelectStone',
@@ -39,11 +48,11 @@ const createSlot = (spec) => {
             let blackStoneCount = stones[field.index()]['black'];
 
             if (index < whiteStoneCount) {
-                api.addStone('white');
+                addStone(game, 'white');
             }
 
             if (index < blackStoneCount) {
-                api.addStone('black');
+                addStone(game, 'black');
             }
         },
         onSelectTarget: (game, selectedStoneData) => {
@@ -57,20 +66,6 @@ const createSlot = (spec) => {
                 };
                 targetMarker.addEventListener('click', targetMarkerClickListener);
             }
-        },
-        addStone: (color) => {
-            stone = createStone({
-                svg,
-                cx,
-                cy,
-                radius,
-                isTop,
-                slotIndex: index,
-                field,
-                color,
-            });
-            stone.show();
-            stone.listen(toGameMem);
         },
         removeStone: () => {
             if (api.hasStone()) {
@@ -87,8 +82,8 @@ const createSlot = (spec) => {
             if (api.hasStone() && stone.dataEquals(selectedStoneData)) {
                 api.removeStone();
             }
-            if (dataEquals(selectedTargetSlotData)) {
-                api.addStone(selectedStoneData.color);
+            if (data.equals(selectedTargetSlotData)) {
+                addStone(game, selectedStoneData.color);
             }
 
             if (targetMarker) {
