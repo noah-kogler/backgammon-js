@@ -37,10 +37,10 @@ const createSlot = (spec) => {
     api = {
         listen: (toGame) => {
             toGame.addEventListeners(api, [
-                'onStart',
-                'onSelectStone',
-                'onSelectTarget',
-                'onTargetSelected',
+                GameEvent.onStart,
+                GameEvent.onSelectStone,
+                GameEvent.onSelectTarget,
+                GameEvent.onTargetSelected,
             ]);
         },
         onStart: (game, stones) => {

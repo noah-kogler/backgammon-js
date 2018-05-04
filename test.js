@@ -31,11 +31,11 @@ document.addEventListener('DOMContentLoaded', function () {
         slotIndex: 0,
     };
     game.goToState([
-        { event: 'onStart', params: [data.stones()] },
-        { event: 'onRollDice', params: [] },
-        { event: 'onDiceRolled', params: [[5, 1]] },
-        { event: 'onSelectStone', params: [] },
-        { event: 'onStoneSelected', params: [selectedStoneData] },
-        { event: 'onSelectTarget', params: [selectedStoneData] },
+        { event: GameEvent.onStart, params: [data.stones()] },
+        { event: GameEvent.onRollDice, params: [] },
+        { event: GameEvent.onDiceRolled, params: [[5, 1]] },
+        { event: GameEvent.onSelectStone, params: [] },
+        { event: GameEvent.onStoneSelected, params: [selectedStoneData] },
+        { event: GameEvent.onSelectTarget, params: [selectedStoneData] },
     ]);
 });

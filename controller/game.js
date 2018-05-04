@@ -5,15 +5,15 @@
 // Never update game attributes in state change triggers!
 // So it's possible to replay a game to a certain state with goToState.
 
-// Events
-
-// onStart(game, stones)
-// onRollDice(game)
-// onDiceRolled(game, result)
-// onSelectStone(game[, selectedStoneData])
-// onStoneSelected(game, selectedStoneData)
-// onSelectTarget(game, selectedStoneData)
-// onTargetSelected(game, selectedStoneData, selectedTargetSlotData)
+const GameEvent = { // value: methodName
+    onStart: 'onStart', // (game, stones)
+    onRollDice: 'onRollDice', // (game)
+    onDiceRolled: 'onDiceRolled', // (game, result)
+    onSelectStone: 'onSelectStone', // (game[, selectedStoneData])
+    onStoneSelected: 'onStoneSelected',// (game, selectedStoneData)
+    onSelectTarget: 'onSelectTarget',// (game, selectedStoneData)
+    onTargetSelected: 'onTargetSelected', // (game, selectedStoneData, selectedTargetSlotData)
+};
 
 const createGameController = (spec) => {
     let api;
@@ -25,8 +25,9 @@ const createGameController = (spec) => {
     const listeners = {}; // { type: [listeners] }
 
     const fireEvent = (type, ...eventArgs) => {
-        log.debug('fireEvent: ' + type + ' ' + (eventArgs ? JSON.stringify(eventArgs) : ''));
-        listeners[type].forEach((listener) => { listener(api, ...eventArgs); });
+        let methodName = GameEvent[type];
+        log.debug('fireEvent: ' + methodName + ' ' + (eventArgs ? JSON.stringify(eventArgs) : ''));
+        listeners[methodName].forEach((listener) => { listener(api, ...eventArgs); });
     };
 
     const fieldIndexDifference = (player, fromFieldIndex, toFieldIndex) => player.equals(Player.WHITE)
@@ -49,16 +50,17 @@ const createGameController = (spec) => {
     api = {
         addEventListeners: (toObj, types) => {
             types.forEach(type => {
-                if (!listeners[type]) {
-                    listeners[type] = [];
+                let methodName = GameEvent[type];
+                if (!listeners[methodName]) {
+                    listeners[methodName] = [];
                 }
-                if (toObj[type]) {
-                    listeners[type].push(toObj[type]);
+                if (toObj[methodName]) {
+                    listeners[methodName].push(toObj[methodName]);
                 }
                 else {
                     log.error(
                         'Missing event handler definition in '
-                        + toObj.toString() + ' for ' + type + '.'
+                        + toObj.toString() + ' for ' + methodName + '.'
                     );
                 }
             });
@@ -107,35 +109,35 @@ const createGameController = (spec) => {
         // State change triggers: Never update data here! Only throw events!
 
         start: () => {
-            fireEvent('onStart', data.stones());
-            fireEvent('onRollDice');
+            fireEvent(GameEvent.onStart, data.stones());
+            fireEvent(GameEvent.onRollDice);
         },
 
         rollDice: () => {
-            fireEvent('onDiceRolled', [
+            fireEvent(GameEvent.onDiceRolled, [
                 rollSingleDice(),
                 rollSingleDice(),
             ]);
-            fireEvent('onSelectStone');
+            fireEvent(GameEvent.onSelectStone);
         },
 
         selectStone: (selectedStoneData) => {
-            fireEvent('onStoneSelected', selectedStoneData);
-            fireEvent('onSelectTarget', selectedStoneData);
+            fireEvent(GameEvent.onStoneSelected, selectedStoneData);
+            fireEvent(GameEvent.onSelectTarget, selectedStoneData);
         },
 
         deselectStone: (selectedStoneData) => {
-            fireEvent('onSelectStone', selectedStoneData);
+            fireEvent(GameEvent.onSelectStone, selectedStoneData);
         },
 
         selectTarget: (selectedStoneData, selectedTargetSlotData) => {
             // TODO validation!
-            fireEvent('onTargetSelected', selectedStoneData, selectedTargetSlotData);
+            fireEvent(GameEvent.onTargetSelected, selectedStoneData, selectedTargetSlotData);
             if (dicePossibilites.length === 0) {
-                fireEvent('onRollDice');
+                fireEvent(GameEvent.onRollDice);
             }
             else {
-                fireEvent('onSelectStone');
+                fireEvent(GameEvent.onSelectStone);
             }
         },
 
@@ -196,7 +198,7 @@ const createGameController = (spec) => {
         toString: () => 'Game',
     };
 
-    api.addEventListeners(api, ['onDiceRolled', 'onTargetSelected']);
+    api.addEventListeners(api, [GameEvent.onDiceRolled, GameEvent.onTargetSelected]);
 
     return Object.freeze(api);
 };

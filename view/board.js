@@ -112,11 +112,11 @@ const createBoard = (spec) => {
     const api = Object.freeze({
         listen: (toGame) => {
             toGame.addEventListeners(api, [
-                'onStart',
-                'onRollDice',
-                'onDiceRolled',
-                'onSelectStone',
-                'onSelectTarget',
+                GameEvent.onStart,
+                GameEvent.onRollDice,
+                GameEvent.onDiceRolled,
+                GameEvent.onSelectStone,
+                GameEvent.onSelectTarget,
             ]);
             fields.forEach(field => { field.listen(toGame) });
         },

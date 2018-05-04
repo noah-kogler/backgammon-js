@@ -78,7 +78,7 @@ const createField = (spec) => {
     api = Object.freeze({
         listen: (toGame) => {
             toGame.addEventListeners(api, [
-                'onStart',
+                GameEvent.onStart,
             ]);
             slots().forEach((slot) => { slot.listen(toGame); });
         },

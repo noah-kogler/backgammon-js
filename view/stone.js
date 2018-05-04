@@ -58,9 +58,9 @@ const createStone = (spec) => {
     api = {
         listen: (toGame) => {
             toGame.addEventListeners(api, [
-                'onStart',
-                'onSelectStone',
-                'onStoneSelected',
+                GameEvent.onStart,
+                GameEvent.onSelectStone,
+                GameEvent.onStoneSelected,
             ]);
         },
         onStart: () => {
