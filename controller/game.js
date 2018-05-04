@@ -15,7 +15,7 @@
 // onSelectTarget(game, selectedStoneData)
 // onTargetSelected(game, selectedStoneData, selectedTargetSlotData)
 
-const createGame = (spec) => {
+const createGameController = (spec) => {
     let api;
 
     const { log, data } = spec;

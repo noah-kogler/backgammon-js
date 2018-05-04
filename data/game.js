@@ -1,22 +1,5 @@
 'use strict';
 
-const createPlayerData = (spec) => {
-
-    const {id, color} = spec;
-
-    return Object.freeze({
-        id,
-        color,
-        equals: (otherPlayer) => id === otherPlayer.id,
-        name: () => spec.color,
-    })
-};
-
-const Player = Object.freeze({
-    WHITE: createPlayerData({ id: 0, color: 'white' }),
-    BLACK: createPlayerData({ id: 1, color: 'black' }),
-});
-
 const createGameData = (spec) => {
 
     const {log} = spec;
@@ -103,36 +86,4 @@ const createGameData = (spec) => {
     });
 
     return api;
-};
-
-const createSlotData = (spec) => {
-
-    const { fieldIndex, slotIndex } = spec;
-
-    const api = {
-        fieldIndex,
-        slotIndex,
-        equals: (slotData) =>
-            slotData.fieldIndex === api.fieldIndex
-            && slotData.slotIndex === api.slotIndex,
-    };
-
-    return Object.freeze(api);
-};
-
-const createStoneData = (spec) => {
-
-    const { fieldIndex, slotIndex, player } = spec;
-
-    const api = {
-        fieldIndex,
-        slotIndex,
-        player,
-        equals: (stoneData) =>
-            stoneData.player.equals(api.player)
-            && stoneData.fieldIndex === api.fieldIndex
-            && stoneData.slotIndex === api.slotIndex,
-    };
-
-    return Object.freeze(api);
 };

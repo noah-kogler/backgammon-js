@@ -1,6 +1,6 @@
 'use strict';
 
-const createView = (spec) => {
+const createRootView = (spec) => {
 
     const { log, x, y, width, height } = spec;
 

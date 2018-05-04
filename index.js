@@ -4,9 +4,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const log = createLog({ level: LogLevel.DEBUG });
 
-    const game = createGame({ log, data: createGameData({ log }) });
+    const game = createGameController({ log, data: createGameData({ log }) });
 
-    const view = createView({
+    const view = createRootView({
         log,
         x: 0,
         y: 20,

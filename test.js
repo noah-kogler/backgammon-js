@@ -11,9 +11,9 @@ document.addEventListener('DOMContentLoaded', function () {
         data.decrementStoneCount(5, Player.BLACK);
     }
 
-    const game = createGame({ log, data });
+    const game = createGameController({ log, data });
 
-    const view = createView({
+    const view = createRootView({
         log,
         x: 0,
         y: 20,
