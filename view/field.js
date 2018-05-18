@@ -23,38 +23,6 @@ const createField = (spec) => {
         );
     })();
 
-    let loadedSlots;
-    const slots = () => {
-        if (loadedSlots) {
-            return loadedSlots;
-        }
-        let slots = [];
-
-        let fieldDiff = 6;
-        let radius = width / 2 - fieldDiff;
-        let cx = x + width / 2;
-        let cy = isTop ? y + radius : y - radius;
-        for (let i = 0; i < 5; i++) {
-            slots.push(
-                createSlot({
-                    log,
-                    svg,
-                    field: api,
-                    cx,
-                    cy,
-                    radius,
-                    index: i,
-                })
-            );
-            cy = isTop ? cy + radius * 2 : cy - radius * 2;
-        }
-
-        loadedSlots = slots;
-        return slots;
-    };
-
-    const targetMarker = undefined;
-
     const indexDisplay = log.levelIs(LogLevel.DEBUG)
         ? (() => {
             let fontSize = 10;
@@ -80,22 +48,38 @@ const createField = (spec) => {
             toGame.addEventListeners(api, [
                 GameEvent.onStart,
             ]);
-            slots().forEach((slot) => { slot.listen(toGame); });
         },
         onStart: (game, stones) => {
             svg.append(node);
             if (log.levelIs(LogLevel.DEBUG)) {
-                svg.append( indexDisplay);
+                svg.append(indexDisplay);
             }
         },
-        nextFreeSlot: () => {
-            let nextIdx = slots().findIndex((slot) => !slot.hasStone());
-            return slots()[nextIdx];
-        },
-        isTop: () => isTop,
-        index: () => index,
         toString: () => 'Field ' + JSON.stringify({ index }),
     });
 
-    return api;
+    let slotContainer = createSlotContainer({
+        log,
+        svg,
+        x,
+        y,
+        width,
+        fieldIndex: index,
+        isTop,
+        slotType: SlotType.REGULAR,
+    });
+
+    return Object.freeze(
+        Object.assign(
+            {},
+            api,
+            slotContainer,
+            {
+                listen: (toGame) => {
+                    api.listen(toGame);
+                    slotContainer.listen(toGame);
+                },
+            },
+        )
+    );
 };

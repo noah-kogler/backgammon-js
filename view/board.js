@@ -10,11 +10,14 @@ const createBoard = (spec) => {
 
     const marginBottom = log.levelIs(LogLevel.DEBUG) ? 10 : 0;
 
+    const bottomY = height + y - marginBottom;
+
+    const fieldWidth = (width - horizontalSpacing) / 12;
+
     const fields = (() => {
         const fields = [];
 
         let fieldX = x;
-        let fieldWidth = (width - horizontalSpacing) / 12;
         let fieldHeight = (height - verticalSpacing) / 2;
         let isTop = true;
         let isWhite = true;
@@ -24,7 +27,7 @@ const createBoard = (spec) => {
                     log: log,
                     svg: svg,
                     x: fieldX,
-                    y: isTop ? y : height + y - marginBottom,
+                    y: isTop ? y : bottomY,
                     width: fieldWidth,
                     height: fieldHeight,
                     index: i,
@@ -55,10 +58,34 @@ const createBoard = (spec) => {
         return fields;
     })();
 
+    const centerBoxX = width / 2 - horizontalSpacing / 2;
+
+    const whiteOut = createSlotContainer({
+        log,
+        svg,
+        x: centerBoxX,
+        y: y + 10,
+        width: fieldWidth,
+        fieldIndex: undefined,
+        isTop: true,
+        slotType: SlotType.OUT,
+    });
+
+    const blackOut = createSlotContainer({
+        log,
+        svg,
+        x: centerBoxX,
+        y: bottomY - 10,
+        width: fieldWidth,
+        fieldIndex: undefined,
+        isTop: false,
+        slotType: SlotType.OUT,
+    });
+
     const centerBox = svg.create(
         'rect',
         {
-            'x': width / 2 - horizontalSpacing / 2,
+            'x': centerBoxX,
             'y': y,
             'width': horizontalSpacing,
             'height': height - marginBottom,
@@ -119,6 +146,8 @@ const createBoard = (spec) => {
                 GameEvent.onSelectTarget,
             ]);
             fields.forEach(field => { field.listen(toGame) });
+            whiteOut.listen(toGame);
+            blackOut.listen(toGame);
         },
         onStart: (game, stones) => {
             svg.append(backgroundBox);

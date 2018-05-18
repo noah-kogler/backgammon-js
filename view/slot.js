@@ -3,9 +3,7 @@
 const createSlot = (spec) => {
     let api;
 
-    const { log, svg, field, cx, cy, radius, index } = spec;
-
-    const isTop = field.isTop();
+    const { log, svg, container, cx, cy, radius, index, fieldIndex, isTop, type } = spec;
 
     let stone = undefined;
 
@@ -14,8 +12,9 @@ const createSlot = (spec) => {
     let targetMarkerClickListener = undefined;
 
     const data = createSlotData({
-        fieldIndex: field.index(),
+        fieldIndex,
         slotIndex: index,
+        type,
     });
 
     const addStone = (game, player) => {
@@ -27,12 +26,27 @@ const createSlot = (spec) => {
             radius,
             player,
             isTop,
-            fieldIndex: data.fieldIndex,
+            fieldIndex: fieldIndex,
             slotIndex: index,
         });
         stone.show();
         stone.listen(game);
     };
+
+    const selectStoneData = (stones, out, done) => {
+        switch (data.type) {
+            case SlotType.REGULAR:
+                return stones[fieldIndex];
+            case SlotType.OUT:
+                return out;
+            case SlotType.DONE:
+                return done;
+            default:
+                log.error('Got unsupported slot view type ' + type);
+        }
+    };
+
+    const isNextFreeSlot = () => index === container.nextFreeSlot().index();
 
     api = {
         listen: (toGame) => {
@@ -41,11 +55,13 @@ const createSlot = (spec) => {
                 GameEvent.onSelectStone,
                 GameEvent.onSelectTarget,
                 GameEvent.onTargetSelected,
+                GameEvent.onThrownOut,
             ]);
         },
-        onStart: (game, stones) => {
-            let whiteStoneCount = stones[field.index()][Player.WHITE.id];
-            let blackStoneCount = stones[field.index()][Player.BLACK.id];
+        onStart: (game, stones, out, done) => {
+            let stoneDefinition = selectStoneData(stones, out, done);
+            let whiteStoneCount = stoneDefinition[Player.WHITE.id];
+            let blackStoneCount = stoneDefinition[Player.BLACK.id];
 
             if (index < whiteStoneCount) {
                 addStone(game, Player.WHITE);
@@ -57,8 +73,9 @@ const createSlot = (spec) => {
         },
         onSelectTarget: (game, selectedStoneData) => {
             if (
-                game.isStoneMovable(selectedStoneData.fieldIndex, data.fieldIndex)
-                && index === field.nextFreeSlot().index()
+                data.type === SlotType.REGULAR
+                && game.isStoneMovable(selectedStoneData.fieldIndex, fieldIndex)
+                && isNextFreeSlot()
             ) {
                 api.addTargetMarker();
                 targetMarkerClickListener = (event) => {
@@ -88,6 +105,27 @@ const createSlot = (spec) => {
 
             if (targetMarker) {
                 api.removeTargetMarker();
+            }
+        },
+        onThrownOut: (game, fromSlotData) => {
+            let opponent = game.currentOpponent();
+
+            if (data.equals(fromSlotData)) {
+                api.removeStone();
+            }
+            else if (
+                data.type === SlotType.OUT
+                // currently only one stone per event
+                && !container.throwOutDone({ todoCount: 1 })
+                && isNextFreeSlot()
+                && (
+                    // implies that white out isTop - TODO: maybe add outPlayer to Slot-Spec
+                    opponent === Player.WHITE && isTop
+                    || opponent === Player.BLACK && !isTop
+                )
+            ) {
+                addStone(game, opponent);
+                container.threwOutStone();
             }
         },
         addTargetMarker: () => {

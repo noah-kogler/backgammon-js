@@ -6,13 +6,14 @@
 // So it's possible to replay a game to a certain state with goToState.
 
 const GameEvent = { // value: methodName
-    onStart: 'onStart', // (game, stones)
+    onStart: 'onStart', // (game, stones, out, done)
     onRollDice: 'onRollDice', // (game)
     onDiceRolled: 'onDiceRolled', // (game, result)
     onSelectStone: 'onSelectStone', // (game[, selectedStoneData])
     onStoneSelected: 'onStoneSelected',// (game, selectedStoneData)
     onSelectTarget: 'onSelectTarget',// (game, selectedStoneData)
     onTargetSelected: 'onTargetSelected', // (game, selectedStoneData, selectedTargetSlotData)
+    onThrownOut: 'onThrownOut', // (game, fromSlotData)
 };
 
 const createGameController = (spec) => {
@@ -26,8 +27,13 @@ const createGameController = (spec) => {
 
     const fireEvent = (type, ...eventArgs) => {
         let methodName = GameEvent[type];
-        log.debug('fireEvent: ' + methodName + ' ' + (eventArgs ? JSON.stringify(eventArgs) : ''));
-        listeners[methodName].forEach((listener) => { listener(api, ...eventArgs); });
+        if (listeners[methodName]) {
+            log.debug('fireEvent: ' + methodName + ' ' + (eventArgs ? JSON.stringify(eventArgs) : ''));
+            listeners[methodName].forEach((listener) => { listener(api, ...eventArgs); });
+        }
+        else {
+            log.debug('fireEvent: ' + methodName + ' has no listeners. Event is ignored.');
+        }
     };
 
     const fieldIndexDifference = (player, fromFieldIndex, toFieldIndex) => player.equals(Player.WHITE)
@@ -85,6 +91,13 @@ const createGameController = (spec) => {
             if (targetOpponentStones === 1) {
                 data.decrementStoneCount(selectedTargetSlotData.fieldIndex, opponent);
                 data.incrementOutCount(opponent);
+                api.throwOut(
+                    createSlotData({
+                        fieldIndex: selectedTargetSlotData.fieldIndex,
+                        slotIndex: selectedTargetSlotData.slotIndex - 1,
+                        type: SlotType.REGULAR // can only be thrown out from a regular slot
+                    })
+                );
             }
             else {
                 data.decrementStoneCount(selectedStoneData.fieldIndex, player);
@@ -109,7 +122,7 @@ const createGameController = (spec) => {
         // State change triggers: Never update data here! Only throw events!
 
         start: () => {
-            fireEvent(GameEvent.onStart, data.stones());
+            fireEvent(GameEvent.onStart, data.stones(), data.out(), data.done());
             fireEvent(GameEvent.onRollDice);
         },
 
@@ -139,6 +152,10 @@ const createGameController = (spec) => {
             else {
                 fireEvent(GameEvent.onSelectStone);
             }
+        },
+
+        throwOut: (fromSlotData) => {
+            fireEvent(GameEvent.onThrownOut, fromSlotData);
         },
 
         // Util methods
@@ -193,7 +210,8 @@ const createGameController = (spec) => {
             });
         },
 
-        currentPlayer: () => data.player(),
+        currentPlayer: data.player,
+        currentOpponent: data.opponent,
 
         toString: () => 'Game',
     };

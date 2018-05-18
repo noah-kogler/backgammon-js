@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
         slotIndex: 0,
     };
     game.goToState([
-        { event: GameEvent.onStart, params: [data.stones()] },
+        { event: GameEvent.onStart, params: [data.stones(), data.out(), data.done()] },
         { event: GameEvent.onRollDice, params: [] },
         { event: GameEvent.onDiceRolled, params: [[5, 1]] },
         { event: GameEvent.onSelectStone, params: [] },

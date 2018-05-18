@@ -57,9 +57,11 @@ const createGameData = (spec) => {
     const move = () => moves[moves.length - 1];
 
     const api = Object.freeze({
-        player: () => Object.freeze(move().player),
-        opponent: () => Object.freeze(move().player.equals(Player.WHITE) ? Player.BLACK : Player.WHITE),
-        stones: () => Object.freeze(move().stones),
+        player: () => move().player,
+        opponent: () => move().player.equals(Player.WHITE) ? Player.BLACK : Player.WHITE,
+        stones: () => move().stones,
+        out: () => move().out,
+        done: () => move().done,
         dice: (...args) => {
             if (args.length === 1) {
                 move().dice = deepCopyObj(args[0]);
