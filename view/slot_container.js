@@ -38,27 +38,42 @@ const createSlotContainer = (spec) => {
         return slots;
     };
 
-    let addedStonesPerThrowOut = 0;
+    let addedStoneCountPerEvent = {
+        onThrownOut: 0,
+    };
 
     api = Object.freeze({
         listen: (toGame) => {
             slots().forEach((slot) => { slot.listen(toGame); });
 
-            // the onThrownOut must be called after the slot handlers
-            // it's used to reset the addedStonesPerThrowOut counter used by slots
-            toGame.addEventListeners(api, [ GameEvent.onThrownOut ]);
+            Object.keys(addedStoneCountPerEvent).forEach((eventType) => {
+                toGame.addEventListeners(api, [ GameEvent[eventType] ]);
+            });
         },
-        onThrownOut: () => {
-            addedStonesPerThrowOut = 0;
+        onThrownOut: (game, fromSlotData) => {
+            addedStoneCountPerEvent.onThrownOut = 0;
+
+            if (fieldIndex === fromSlotData.fieldIndex) {
+                let nextFreeSlot = api.nextFreeSlot();
+                for (var i = slots().length - 1; i >= 0 && nextFreeSlot != undefined; i--) {
+                    if (nextFreeSlot.index() < i && slots()[i].hasStone()) {
+                        const removed = slots()[i].removeStone();
+                        nextFreeSlot.addStone(game, removed.player());
+                        nextFreeSlot = api.nextFreeSlot();
+                    }
+                }
+            }
         },
         nextFreeSlot: () => {
             let nextIdx = slots().findIndex((slot) => !slot.hasStone());
             return slots()[nextIdx];
         },
-        throwOutDone: (args) => addedStonesPerThrowOut >= args.todoCount,
-        threwOutStone: () => {
-            addedStonesPerThrowOut++;
+        stoneWasAdded: (eventType) => {
+            if (eventType in addedStoneCountPerEvent) {
+                addedStoneCountPerEvent[eventType]++;
+            }
         },
+        addedStoneCount: (eventType) => addedStoneCountPerEvent[eventType],
     });
 
     return api;

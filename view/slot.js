@@ -17,22 +17,6 @@ const createSlot = (spec) => {
         type,
     });
 
-    const addStone = (game, player) => {
-        stone = createStone({
-            log,
-            svg,
-            cx,
-            cy,
-            radius,
-            player,
-            isTop,
-            fieldIndex: fieldIndex,
-            slotIndex: index,
-        });
-        stone.show();
-        stone.listen(game);
-    };
-
     const selectStoneData = (stones, out, done) => {
         switch (data.type) {
             case SlotType.REGULAR:
@@ -64,11 +48,11 @@ const createSlot = (spec) => {
             let blackStoneCount = stoneDefinition[Player.BLACK.id];
 
             if (index < whiteStoneCount) {
-                addStone(game, Player.WHITE);
+                api.addStone(game, Player.WHITE, GameEvent.onStart);
             }
 
             if (index < blackStoneCount) {
-                addStone(game, Player.BLACK);
+                api.addStone(game, Player.BLACK, GameEvent.onStart);
             }
         },
         onSelectTarget: (game, selectedStoneData) => {
@@ -84,10 +68,30 @@ const createSlot = (spec) => {
                 targetMarker.addEventListener('click', targetMarkerClickListener);
             }
         },
+        addStone: (game, player, byEvent) => {
+            stone = createStone({
+                log,
+                svg,
+                cx,
+                cy,
+                radius,
+                player,
+                isTop,
+                fieldIndex: fieldIndex,
+                slotIndex: index,
+            });
+            stone.show();
+            stone.listen(game);
+            if (byEvent !== undefined) {
+                container.stoneWasAdded(byEvent);
+            }
+        },
         removeStone: () => {
             if (api.hasStone()) {
+                let removed = stone;
                 stone.hide();
                 stone = undefined;
+                return removed;
             }
         },
         onSelectStone: (game, selectedStoneData) => {
@@ -100,7 +104,7 @@ const createSlot = (spec) => {
                 api.removeStone();
             }
             if (data.equals(selectedTargetSlotData)) {
-                addStone(game, selectedStoneData.player);
+                api.addStone(game, selectedStoneData.player, GameEvent.onTargetSelected);
             }
 
             if (targetMarker) {
@@ -116,7 +120,7 @@ const createSlot = (spec) => {
             else if (
                 data.type === SlotType.OUT
                 // currently only one stone per event
-                && !container.throwOutDone({ todoCount: 1 })
+                && container.addedStoneCount(GameEvent.onThrownOut) < 1
                 && isNextFreeSlot()
                 && (
                     // implies that white out isTop - TODO: maybe add outPlayer to Slot-Spec
@@ -124,8 +128,7 @@ const createSlot = (spec) => {
                     || opponent === Player.BLACK && !isTop
                 )
             ) {
-                addStone(game, opponent);
-                container.threwOutStone();
+                api.addStone(game, opponent, GameEvent.onThrownOut);
             }
         },
         addTargetMarker: () => {

@@ -25,14 +25,27 @@ const createGameController = (spec) => {
 
     const listeners = {}; // { type: [listeners] }
 
+    // Call queue is used to keep events in order.
+    // E.g. onTargetSelected in GameController fires onThrownOut.
+    // The eventCallQueue is used, to finish calling all onTargetSelected listeners in the views
+    // before starting to call onThrownOut listeners.
+    const eventCallQueue = [];
+
     const fireEvent = (type, ...eventArgs) => {
         let methodName = GameEvent[type];
         if (listeners[methodName]) {
             log.debug('fireEvent: ' + methodName + ' ' + (eventArgs ? JSON.stringify(eventArgs) : ''));
-            listeners[methodName].forEach((listener) => { listener(api, ...eventArgs); });
+            listeners[methodName].forEach((listener) => {
+                eventCallQueue.push({ listener: listener, args: eventArgs });
+            });
         }
         else {
             log.debug('fireEvent: ' + methodName + ' has no listeners. Event is ignored.');
+        }
+
+        while (eventCallQueue.length > 0) {
+            var nextCall = eventCallQueue.shift();
+            nextCall.listener(api, ...nextCall.args)
         }
     };
 

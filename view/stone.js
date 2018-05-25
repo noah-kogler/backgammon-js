@@ -110,6 +110,7 @@ const createStone = (spec) => {
             node.parentNode.removeChild(node);
         },
         dataEquals: data.equals,
+        player: () => data.player,
         toString: () => 'Stone ' + JSON.stringify(data),
     };
 
